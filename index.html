@@ -14,7 +14,7 @@
     content="Eduardo Sanches, Links, GitHub, X, Instagram"
   />
   <!-- Favicon -->
-  <link rel="icon" href="favicon.png" type="image" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <!-- Google Fonts -->
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto&family=Old+Standard+TT:wght@700&display=swap"
@@ -101,7 +101,7 @@
       <i class="fab fa-github"></i> GitHub
     </a>
     <a href="https://x.com/_eduardosanches">
-      <i class="fa-brands fa-x-twitter"></i> X
+      <i class="fab fa-x-twitter"></i> X
     </a>
     <a href="https://instagram.com/_eduardosanches">
       <i class="fab fa-instagram"></i> Instagram
@@ -122,25 +122,24 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    const squareSize = 30;
-    let columns = 20; // Number of columns in the grid
-    let rows = 20;    // Number of rows in the grid
+    const squareSize = 50;
+    const gridSize = 50; // Increase for larger grid
     let mouseX = canvas.width / 2;
     let mouseY = canvas.height / 2;
 
     // Perspective parameters
-    let perspective = 500; // Controls the depth of the perspective
-    let gridOriginX = canvas.width / 2;
-    let gridOriginY = canvas.height / 1.5; // Position the grid lower on the screen
+    const cameraAngle = Math.PI / 4; // 45 degrees in radians
+    const cameraHeight = 200;        // Height of the camera from the grid
+    const perspective = 800;         // Controls the depth of the perspective
 
     // Initialize grid points in 3D space
     let points = [];
 
     function initGrid() {
       points = [];
-      for (let x = -columns / 2; x <= columns / 2; x++) {
+      for (let x = -gridSize; x <= gridSize; x++) {
         points[x] = [];
-        for (let y = 0; y <= rows; y++) {
+        for (let y = -gridSize; y <= gridSize; y++) {
           // Initialize points in 3D space
           points[x][y] = {
             x: x * squareSize,
@@ -167,10 +166,16 @@
 
     // Perspective projection function
     function project(x, y, z) {
-      const scale = perspective / (perspective + z);
+      // Apply rotation around the X-axis
+      const cosAngle = Math.cos(cameraAngle);
+      const sinAngle = Math.sin(cameraAngle);
+      const yRotated = y * cosAngle - z * sinAngle;
+      const zRotated = y * sinAngle + z * cosAngle;
+
+      const scale = perspective / (perspective + zRotated + cameraHeight);
       return {
-        x: gridOriginX + x * scale,
-        y: gridOriginY + y * scale
+        x: canvas.width / 2 + x * scale,
+        y: canvas.height / 2 + yRotated * scale
       };
     }
 
@@ -179,12 +184,12 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.001;
-      const amplitude = 50; // Controls how much the grid points move
-      const waveLength = 200; // Controls the length of the wave
+      const amplitude = 20; // Controls how much the grid points move
+      const waveLength = 300; // Controls the length of the wave
 
       // Draw squares using the grid points
-      for (let x = -columns / 2; x < columns / 2; x++) {
-        for (let y = 0; y < rows; y++) {
+      for (let x = -gridSize; x < gridSize; x++) {
+        for (let y = -gridSize; y < gridSize; y++) {
           // Get current and adjacent points
           const p1 = points[x][y];
           const p2 = points[x + 1][y];
@@ -193,8 +198,8 @@
 
           // Calculate wave effect on y-coordinate (height)
           [p1, p2, p3, p4].forEach(p => {
-            const dx = p.x - (mouseX - canvas.width / 2);
-            const dz = p.z - (mouseY - gridOriginY);
+            const dx = p.x;
+            const dz = p.z;
             const distance = Math.sqrt(dx * dx + dz * dz);
             p.y = Math.sin((distance / waveLength - time)) * amplitude;
           });
@@ -226,8 +231,6 @@
     // Reinitialize grid on window resize
     window.addEventListener('resize', function() {
       resizeCanvas();
-      gridOriginX = canvas.width / 2;
-      gridOriginY = canvas.height / 1.5;
     });
   </script>
 </body>
