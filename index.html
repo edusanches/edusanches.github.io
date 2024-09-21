@@ -14,7 +14,7 @@
     content="Eduardo Sanches, Links, GitHub, X, Instagram"
   />
   <!-- Favicon -->
-  <link rel="icon" href="favicon.png" type="image" />
+  <link rel="icon" href="favicon.png" type="image/png" />
   <!-- Google Fonts -->
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto&family=Cormorant+Garamond:wght@700&display=swap"
@@ -54,6 +54,13 @@
       font-weight: 700;
       margin-bottom: 30px;
     }
+    /* Profile Image Styles */
+    .profile-image {
+      width: 150px;
+      border-radius: 50%;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
     /* Links Styles */
     .links a {
       display: block;
@@ -87,11 +94,11 @@
   <!-- Canvas for Background Animation -->
   <canvas id="backgroundCanvas"></canvas>
 
-  <!-- Profile Image -->
+  <!-- Profile Image with Halo Effect -->
   <img
     src="profile.jpg"
     alt="Eduardo Sanches"
-    style="width:150px; border-radius:50%; margin-bottom:20px;"
+    class="profile-image"
   />
   <!-- Heading -->
   <h1>eduardo sanches</h1>
