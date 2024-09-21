@@ -11,7 +11,7 @@
   />
   <meta
     name="keywords"
-    content="Eduardo Sanches, Links, GitHub, X, Instagram"
+    content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube"
   />
   <!-- Favicon -->
   <link rel="icon" href="favicon.png" type="image/png" />
@@ -24,6 +24,9 @@
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    integrity="sha512-..."
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
   />
   <!-- Your CSS Styles -->
   <style>
@@ -60,32 +63,64 @@
       border-radius: 50%;
       margin-bottom: 20px;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      transition: box-shadow 0.3s ease;
     }
-    /* Links Styles */
-    .links a {
-      display: block;
-      margin: 10px auto;
-      padding: 15px;
+    .profile-image:hover {
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+    /* Links Container */
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    /* Social Media Button Styles */
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px 25px;
       width: 100%;
       max-width: 250px;
-      background-color: #0073e6;
+      background-color: rgba(255, 255, 255, 0.1);
       color: #ffffff;
       text-decoration: none;
-      border-radius: 5px;
-      transition: background-color 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      font-size: 18px;
     }
-    .links a:hover {
-      background-color: #005bb5;
+    .social-button i {
+      margin-right: 10px;
+      font-size: 20px;
+      transition: transform 0.3s ease;
     }
-    .links a img,
-    .links a i {
-      vertical-align: middle;
-      margin-right: 8px;
+    .social-button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+    }
+    .social-button:hover i {
+      transform: scale(1.2);
     }
     /* Responsive Styles */
     @media (max-width: 600px) {
       body {
         padding: 20px;
+      }
+      .social-button {
+        max-width: 200px;
+        padding: 12px 20px;
+        font-size: 16px;
+      }
+      h1 {
+        font-size: 36px;
       }
     }
   </style>
@@ -104,16 +139,16 @@
   <h1>eduardo sanches</h1>
   <!-- Links Section -->
   <div class="links">
-    <a href="https://x.com/_eduardosanches">
+    <a href="https://x.com/_eduardosanches" class="social-button">
       <i class="fab fa-x-twitter"></i> X
     </a>
-    <a href="https://instagram.com/_eduardosanches">
+    <a href="https://instagram.com/_eduardosanches" class="social-button">
       <i class="fab fa-instagram"></i> Instagram
     </a>
-    <a href="https://www.youtube.com/@eduardo_sanches">
+    <a href="https://www.youtube.com/@eduardo_sanches" class="social-button">
       <i class="fab fa-youtube"></i> YouTube
     </a>
-    <a href="https://github.com/edusanches">
+    <a href="https://github.com/edusanches" class="social-button">
       <i class="fab fa-github"></i> GitHub
     </a>
     <!-- Add more links as needed -->
