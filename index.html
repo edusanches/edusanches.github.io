@@ -114,55 +114,60 @@
     const canvas = document.getElementById('backgroundCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Resize the canvas to fill browser window dynamically
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
     const squareSize = 50;
-    const gridSize = 50; // Increase for larger grid
-    let mouseX = canvas.width / 2;
-    let mouseY = canvas.height / 2;
+    let points = [];
 
     // Perspective parameters
     const cameraAngle = Math.PI / 4; // 45 degrees in radians
     const cameraHeight = 200;        // Height of the camera from the grid
     const perspective = 800;         // Controls the depth of the perspective
 
-    // Initialize grid points in 3D space
-    let points = [];
-
-    function initGrid() {
-      points = [];
-      for (let x = -gridSize; x <= gridSize; x++) {
-        points[x] = [];
-        for (let y = -gridSize; y <= gridSize; y++) {
-          // Initialize points in 3D space
-          points[x][y] = {
-            x: x * squareSize,
-            y: 0,
-            z: y * squareSize
-          };
-        }
-      }
-    }
-    initGrid();
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
 
     // Update mouse position
     function updateMousePosition(e) {
-      if (e.touches) {
+      if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
         mouseY = e.touches[0].clientY;
-      } else {
+      } else if (e.clientX && e.clientY) {
         mouseX = e.clientX;
         mouseY = e.clientY;
       }
     }
     document.addEventListener('mousemove', updateMousePosition);
     document.addEventListener('touchmove', updateMousePosition);
+
+    // Resize the canvas to fill browser window dynamically
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initGrid(); // Reinitialize grid when canvas size changes
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Initialize grid points in 3D space
+    function initGrid() {
+      points = [];
+      const gridSizeX = 100; // Increase for larger grid coverage
+      const gridSizeY = 100;
+
+      for (let x = 0; x <= gridSizeX; x++) {
+        points[x] = [];
+        for (let y = 0; y <= gridSizeY; y++) {
+          // Center the grid
+          const xPos = (x - gridSizeX / 2) * squareSize;
+          const yPos = (y - gridSizeY / 2) * squareSize;
+          // Initialize points in 3D space
+          points[x][y] = {
+            x: xPos,
+            y: 0,
+            z: yPos
+          };
+        }
+      }
+    }
 
     // Perspective projection function
     function project(x, y, z) {
@@ -184,25 +189,46 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.001;
-      const amplitude = 20; // Controls how much the grid points move
+      const amplitude = 20; // Base amplitude for the wave
       const waveLength = 300; // Controls the length of the wave
+      const influenceRadius = 200; // Radius around the mouse where influence is strongest
+
+      const gridWidth = points.length;
+      const gridHeight = points[0].length;
+
+      // Update grid points positions
+      for (let x = 0; x < gridWidth; x++) {
+        for (let y = 0; y < gridHeight; y++) {
+          const p = points[x][y];
+          // Default wave based on position and time
+          const distanceFromCenter = Math.sqrt(p.x * p.x + p.z * p.z);
+          const defaultWave = Math.sin((distanceFromCenter / waveLength - time)) * amplitude;
+
+          // Calculate distance from mouse in screen space
+          const projP = project(p.x, p.y, p.z);
+          const dxMouse = projP.x - mouseX;
+          const dyMouse = projP.y - mouseY;
+          const distanceToMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+          // Influence decreases with distance from mouse
+          const influence = Math.max(0, influenceRadius - distanceToMouse) / influenceRadius;
+
+          // Additional wave influenced by mouse
+          const mouseWave = Math.sin((distanceFromCenter / waveLength - time)) * amplitude * influence * 2;
+
+          // Total wave effect
+          p.y = defaultWave + mouseWave;
+        }
+      }
 
       // Draw squares using the grid points
-      for (let x = -gridSize; x < gridSize; x++) {
-        for (let y = -gridSize; y < gridSize; y++) {
-          // Get current and adjacent points
+      for (let x = 0; x < gridWidth - 1; x++) {
+        for (let y = 0; y < gridHeight - 1; y++) {
+          // Get four corners of the square
           const p1 = points[x][y];
           const p2 = points[x + 1][y];
           const p3 = points[x + 1][y + 1];
           const p4 = points[x][y + 1];
-
-          // Calculate wave effect on y-coordinate (height)
-          [p1, p2, p3, p4].forEach(p => {
-            const dx = p.x;
-            const dz = p.z;
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            p.y = Math.sin((distance / waveLength - time)) * amplitude;
-          });
 
           // Project 3D points to 2D
           const projP1 = project(p1.x, p1.y, p1.z);
@@ -210,16 +236,22 @@
           const projP3 = project(p3.x, p3.y, p3.z);
           const projP4 = project(p4.x, p4.y, p4.z);
 
-          // Draw quadrilateral
-          ctx.beginPath();
-          ctx.moveTo(projP1.x, projP1.y);
-          ctx.lineTo(projP2.x, projP2.y);
-          ctx.lineTo(projP3.x, projP3.y);
-          ctx.lineTo(projP4.x, projP4.y);
-          ctx.closePath();
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          // Only draw if within viewport to improve performance
+          if (
+            (projP1.x >= -squareSize && projP1.x <= canvas.width + squareSize) &&
+            (projP1.y >= -squareSize && projP1.y <= canvas.height + squareSize)
+          ) {
+            // Draw quadrilateral
+            ctx.beginPath();
+            ctx.moveTo(projP1.x, projP1.y);
+            ctx.lineTo(projP2.x, projP2.y);
+            ctx.lineTo(projP3.x, projP3.y);
+            ctx.lineTo(projP4.x, projP4.y);
+            ctx.closePath();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
         }
       }
 
@@ -227,11 +259,6 @@
     }
 
     animate();
-
-    // Reinitialize grid on window resize
-    window.addEventListener('resize', function() {
-      resizeCanvas();
-    });
   </script>
 </body>
 </html>
