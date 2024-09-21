@@ -122,27 +122,11 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    let squares = [];
     const squareSize = 30;
     let columns = Math.floor(canvas.width / squareSize) + 1;
     let rows = Math.floor(canvas.height / squareSize) + 1;
     let mouseX = canvas.width / 2;
     let mouseY = canvas.height / 2;
-
-    // Initialize squares
-    function initSquares() {
-      squares = [];
-      columns = Math.floor(canvas.width / squareSize) + 1;
-      rows = Math.floor(canvas.height / squareSize) + 1;
-
-      for (let x = 0; x < columns; x++) {
-        squares[x] = [];
-        for (let y = 0; y < rows; y++) {
-          squares[x][y] = { x: x * squareSize, y: y * squareSize };
-        }
-      }
-    }
-    initSquares();
 
     // Update mouse position
     function updateMousePosition(e) {
@@ -162,33 +146,41 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.002;
-      const amplitude = 10; // Wave amplitude
-      const frequency = 0.1; // Wave frequency
-      const speed = 0.05; // Wave speed
+      const amplitude = 5; // Controls how much the corners move
+      const frequency = 0.5; // Controls the speed of the wave
+      const speed = 0.1; // Controls the mouse influence
 
       for (let x = 0; x < columns; x++) {
         for (let y = 0; y < rows; y++) {
-          // Calculate offset based on time, position, and mouse
           const offsetX = x * squareSize;
           const offsetY = y * squareSize;
-          const distanceX = (mouseX - offsetX) * 0.05;
-          const distanceY = (mouseY - offsetY) * 0.05;
 
-          const waveX =
-            amplitude *
-            Math.sin(frequency * (offsetY + time * 100) + distanceX * speed);
-          const waveY =
-            amplitude *
-            Math.cos(frequency * (offsetX + time * 100) + distanceY * speed);
+          // Distance from mouse
+          const dx = mouseX - offsetX;
+          const dy = mouseY - offsetY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const angle = distance * 0.05 - time;
 
-          // Draw square
+          // Calculate offsets for each corner
+          const tlOffsetX = amplitude * Math.cos(angle);
+          const tlOffsetY = amplitude * Math.sin(angle);
+
+          const trOffsetX = amplitude * Math.cos(angle + 1);
+          const trOffsetY = amplitude * Math.sin(angle + 1);
+
+          const brOffsetX = amplitude * Math.cos(angle + 2);
+          const brOffsetY = amplitude * Math.sin(angle + 2);
+
+          const blOffsetX = amplitude * Math.cos(angle + 3);
+          const blOffsetY = amplitude * Math.sin(angle + 3);
+
+          // Draw quadrilateral
           ctx.beginPath();
-          ctx.rect(
-            offsetX + waveX,
-            offsetY + waveY,
-            squareSize,
-            squareSize
-          );
+          ctx.moveTo(offsetX + tlOffsetX, offsetY + tlOffsetY); // Top-left corner
+          ctx.lineTo(offsetX + squareSize + trOffsetX, offsetY + trOffsetY); // Top-right corner
+          ctx.lineTo(offsetX + squareSize + brOffsetX, offsetY + squareSize + brOffsetY); // Bottom-right corner
+          ctx.lineTo(offsetX + blOffsetX, offsetY + squareSize + blOffsetY); // Bottom-left corner
+          ctx.closePath();
           ctx.strokeStyle = 'white';
           ctx.lineWidth = 1;
           ctx.stroke();
@@ -203,7 +195,8 @@
     // Reinitialize squares on window resize
     window.addEventListener('resize', function() {
       resizeCanvas();
-      initSquares();
+      columns = Math.floor(canvas.width / squareSize) + 1;
+      rows = Math.floor(canvas.height / squareSize) + 1;
     });
   </script>
 </body>
