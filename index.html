@@ -1,20 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Meta Tags -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eduardo Sanches | Links</title>
-  <!-- Google Fonts -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto&family=Old+Standard+TT&display=swap"
-    rel="stylesheet"
-  />
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
-  <!-- Meta Tags -->
+  <title>eduardo sanches | links</title>
   <meta
     name="description"
     content="A collection of important links for Eduardo Sanches."
@@ -23,20 +13,48 @@
     name="keywords"
     content="Eduardo Sanches, Links, GitHub, X, Instagram"
   />
+  <!-- Favicon -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Old+Standard+TT:wght@700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <!-- Your CSS Styles -->
   <style>
+    /* Body Styles */
     body {
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #000000;
       color: #ffffff;
       text-align: center;
       padding: 50px;
+      margin: 0;
+      overflow: hidden;
+      position: relative;
     }
+    /* Canvas Styles */
+    canvas#backgroundCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    /* Heading Styles */
     h1 {
       font-family: 'Old Standard TT', serif;
       font-size: 48px;
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 30px;
     }
+    /* Links Styles */
     .links a {
       display: block;
       margin: 10px auto;
@@ -57,6 +75,7 @@
       vertical-align: middle;
       margin-right: 8px;
     }
+    /* Responsive Styles */
     @media (max-width: 600px) {
       body {
         padding: 20px;
@@ -65,23 +84,131 @@
   </style>
 </head>
 <body>
+  <!-- Canvas for Background Animation -->
+  <canvas id="backgroundCanvas"></canvas>
+
+  <!-- Profile Image -->
   <img
     src="profile.jpg"
     alt="Eduardo Sanches"
     style="width:150px; border-radius:50%; margin-bottom:20px;"
   />
+  <!-- Heading -->
   <h1>eduardo sanches</h1>
+  <!-- Links Section -->
   <div class="links">
     <a href="https://github.com/eduardosanches">
       <i class="fab fa-github"></i> GitHub
     </a>
     <a href="https://x.com/_eduardosanches">
-      <i class="fa-brands fa-x-twitter"></i> X
+      <!-- Use a generic 'X' icon or a custom image -->
+      <i class="fas fa-times"></i> X
+      <!-- Alternatively, use an image -->
+      <!-- <img src="x-logo.png" alt="X Logo" style="width:20px; vertical-align:middle; margin-right:8px;"> X -->
     </a>
     <a href="https://instagram.com/_eduardosanches">
       <i class="fab fa-instagram"></i> Instagram
     </a>
     <!-- Add more links as needed -->
   </div>
+
+  <!-- JavaScript for Background Animation -->
+  <script>
+    const canvas = document.getElementById('backgroundCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Resize the canvas to fill browser window dynamically
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let squares = [];
+    const squareSize = 30;
+    let columns = Math.floor(canvas.width / squareSize) + 1;
+    let rows = Math.floor(canvas.height / squareSize) + 1;
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
+
+    // Initialize squares
+    function initSquares() {
+      squares = [];
+      // Remove 'let' to update global variables
+      columns = Math.floor(canvas.width / squareSize) + 1;
+      rows = Math.floor(canvas.height / squareSize) + 1;
+
+      for (let x = 0; x < columns; x++) {
+        squares[x] = [];
+        for (let y = 0; y < rows; y++) {
+          squares[x][y] = { x: x * squareSize, y: y * squareSize };
+        }
+      }
+    }
+    initSquares();
+
+    // Update mouse position
+    function updateMousePosition(e) {
+      if (e.touches) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+      } else {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      }
+    }
+    document.addEventListener('mousemove', updateMousePosition);
+    document.addEventListener('touchmove', updateMousePosition);
+
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const time = Date.now() * 0.002;
+      const amplitude = 10; // Wave amplitude
+      const frequency = 0.1; // Wave frequency
+      const speed = 0.05; // Wave speed
+
+      for (let x = 0; x < columns; x++) {
+        for (let y = 0; y < rows; y++) {
+          // Calculate offset based on time, position, and mouse
+          const offsetX = x * squareSize;
+          const offsetY = y * squareSize;
+          const distanceX = (mouseX - offsetX) * 0.05;
+          const distanceY = (mouseY - offsetY) * 0.05;
+
+          const waveX =
+            amplitude *
+            Math.sin(frequency * (offsetY + time * 100) + distanceX * speed);
+          const waveY =
+            amplitude *
+            Math.cos(frequency * (offsetX + time * 100) + distanceY * speed);
+
+          // Draw square
+          ctx.beginPath();
+          ctx.rect(
+            offsetX + waveX,
+            offsetY + waveY,
+            squareSize,
+            squareSize
+          );
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // Reinitialize squares on window resize
+    window.addEventListener('resize', function() {
+      resizeCanvas();
+      initSquares();
+    });
+  </script>
 </body>
 </html>
