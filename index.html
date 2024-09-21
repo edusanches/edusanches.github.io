@@ -6,7 +6,7 @@
   <title>Eduardo Sanches | Links</title>
   <!-- Google Fonts -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Old+Standard+TT&display=swap"
     rel="stylesheet"
   />
   <!-- Font Awesome -->
@@ -31,6 +31,12 @@
       text-align: center;
       padding: 50px;
     }
+    h1 {
+      font-family: 'Old Standard TT', serif;
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
     .links a {
       display: block;
       margin: 10px auto;
@@ -46,7 +52,9 @@
     .links a:hover {
       background-color: #005bb5;
     }
+    .links a img,
     .links a i {
+      vertical-align: middle;
       margin-right: 8px;
     }
     @media (max-width: 600px) {
@@ -68,10 +76,7 @@
       <i class="fab fa-github"></i> GitHub
     </a>
     <a href="https://x.com/_eduardosanches">
-      <!-- Use Font Awesome Icon -->
-      <!-- <i class="fab fa-x-twitter"></i> X -->
-      <!-- Or use Custom Image -->
-      <img src="x-logo.png" alt="X Logo" style="width:20px; vertical-align:middle; margin-right:8px;"> X
+      <img src="x-logo.png" alt="X Logo" class="icon" /> X
     </a>
     <a href="https://instagram.com/_eduardosanches">
       <i class="fab fa-instagram"></i> Instagram
