@@ -14,7 +14,7 @@
     content="Eduardo Sanches, Links, GitHub, X, Instagram"
   />
   <!-- Favicon -->
-  <link rel="icon" href="favicon.png" type="image" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <!-- Google Fonts -->
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto&family=Old+Standard+TT:wght@700&display=swap"
@@ -248,7 +248,8 @@
             ctx.lineTo(projP3.x, projP3.y);
             ctx.lineTo(projP4.x, projP4.y);
             ctx.closePath();
-            ctx.strokeStyle = 'white';
+            // Set stroke style with 10% opacity
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
             ctx.lineWidth = 1;
             ctx.stroke();
           }
