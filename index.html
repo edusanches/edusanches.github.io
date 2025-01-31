@@ -4,7 +4,7 @@
   <!-- Basic Meta Tags -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  
   <title>eduardo sanches</title>
   <meta name="description" content="A collection of important links for Eduardo Sanches." />
   <meta name="keywords" content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube" />
@@ -41,7 +41,7 @@
       position: relative;
     }
 
-    /* Canvas Styles */
+    /* Canvas Styles (Full-Screen) */
     canvas#backgroundCanvas {
       position: fixed;
       top: 0;
@@ -62,9 +62,9 @@
     /* Profile Image Styles */
     .profile-image {
       width: 150px;
-      height: 150px;            /* Keep height the same as width for a perfect circle */
-      object-fit: cover;        /* Ensures the image doesn't stretch */
-      border-radius: 50%;       /* Circular shape */
+      height: 150px;       /* Keep height = width for a perfect circle */
+      object-fit: cover;   /* Ensures the image doesn't stretch */
+      border-radius: 50%;  /* Circular shape */
       margin-bottom: 20px;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
       transition: box-shadow 0.3s ease;
@@ -99,25 +99,22 @@
       border-radius: 25px;
       transition: all 0.3s ease;
       backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px); /* Safari */
+      -webkit-backdrop-filter: blur(5px);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       font-size: 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-
     .social-button i {
       margin-right: 10px;
       font-size: 20px;
       transition: transform 0.3s ease;
     }
-
     .social-button:hover {
       background-color: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
       transform: translateY(-3px);
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
     }
-
     .social-button:hover i {
       transform: scale(1.2);
     }
@@ -152,8 +149,10 @@
     alt="Profile picture of Eduardo Sanches"
     class="profile-image"
   />
+
   <!-- Heading -->
   <h1>eduardo sanches</h1>
+
   <!-- Links Section -->
   <div class="links">
     <a href="https://x.com/_eduardosanches" class="social-button" aria-label="X">
@@ -175,19 +174,15 @@
     const canvas = document.getElementById('backgroundCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Grid size lowered to improve performance
-    const gridSizeX = 50;
-    const gridSizeY = 50;
-    const squareSize = 50;
+    const squareSize = 50; // Size of each square in the grid
     let points = [];
 
     // Perspective parameters
-    const cameraAngle = Math.PI / 4; // 45 degrees
-    const cameraHeight = 200;        // Height of the camera
-    const perspective = 800;         // Controls depth of the perspective
+    const cameraAngle = Math.PI / 4;  // 45 degrees
+    const cameraHeight = 200;        // Height above the grid
+    const perspective = 800;         // The "distance" factor for perspective
 
-    let mouseX = 0;
-    let mouseY = 0;
+    let mouseX = 0, mouseY = 0;
 
     // Update mouse position
     function updateMousePosition(e) {
@@ -202,30 +197,37 @@
     document.addEventListener('mousemove', updateMousePosition);
     document.addEventListener('touchmove', updateMousePosition, { passive: false });
 
-    // Resize canvas to fill the window and init the grid
+    // Dynamically set canvas size
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      initGrid();
+      initGrid(); // Reinitialize grid to cover the new size
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Initialize the 3D grid points
+    // Create a grid that covers (and slightly exceeds) the entire screen
     function initGrid() {
       points = [];
-      for (let x = 0; x <= gridSizeX; x++) {
+
+      // Number of squares needed to cover the screen in each dimension, with some margin
+      const squaresX = Math.ceil(canvas.width / squareSize) + 6; 
+      const squaresY = Math.ceil(canvas.height / squareSize) + 6;
+
+      // Generate (x, y, z) points in 3D space, centered at screen center
+      for (let x = 0; x <= squaresX; x++) {
         points[x] = [];
-        for (let y = 0; y <= gridSizeY; y++) {
-          const xPos = (x - gridSizeX / 2) * squareSize;
+        for (let y = 0; y <= squaresY; y++) {
+          // Shift so the grid is centered
+          const xPos = (x - squaresX / 2) * squareSize;
           const yPos = 0;
-          const zPos = (y - gridSizeY / 2) * squareSize;
+          const zPos = (y - squaresY / 2) * squareSize;
           points[x][y] = { x: xPos, y: yPos, z: zPos };
         }
       }
     }
 
-    // Convert (x, y, z) to 2D screen space
+    // Project 3D point into 2D screen coordinates
     function project(x, y, z) {
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
@@ -237,11 +239,11 @@
       const scale = perspective / (perspective + zRot + cameraHeight);
       return {
         x: canvas.width / 2 + x * scale,
-        y: canvas.height / 2 + yRot * scale,
+        y: canvas.height / 2 + yRot * scale
       };
     }
 
-    // Check if a quadrilateral is offscreen
+    // Quick bounding-box check to avoid drawing off-screen squares
     function isOffScreen(...corners) {
       const xs = corners.map(p => p.x);
       const ys = corners.map(p => p.y);
@@ -250,27 +252,26 @@
       const minY = Math.min(...ys);
       const maxY = Math.max(...ys);
 
-      // If the bounding box is fully outside, skip
+      // If bounding box is entirely outside the canvas, skip
       if (maxX < 0 || minX > canvas.width || maxY < 0 || minY > canvas.height) {
         return true;
       }
       return false;
     }
 
-    // Animate the grid
     function animate() {
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.001;
-      const amplitude = 20;       // Height of the wave
-      const waveLength = 300;     // Wave length factor
-      const influenceRadius = 200; // Mouse wave influence radius
+      const amplitude = 20;           // Base height of the wave
+      const waveLength = 300;         // Wave length factor
+      const influenceRadius = 200;    // Mouse "wave" influence radius
 
       const gridWidth = points.length;
       const gridHeight = points[0].length;
 
-      // Update vertical wave (y) for each grid point
+      // Update each point in the grid
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
           const p = points[x][y];
@@ -279,22 +280,20 @@
           // Base wave
           const defaultWave = Math.sin(distCenter / waveLength - time) * amplitude;
 
-          // Calculate mouse influence
+          // Mouse wave influence
           const projP = project(p.x, p.y, p.z);
           const dx = projP.x - mouseX;
           const dy = projP.y - mouseY;
           const distMouse = Math.sqrt(dx * dx + dy * dy);
           const influence = Math.max(0, influenceRadius - distMouse) / influenceRadius;
-
-          // Additional wave effect due to mouse
           const mouseWave = Math.sin(distCenter / waveLength - time) * amplitude * influence * 2;
 
-          // Combine effects
+          // Combine wave effects
           p.y = defaultWave + mouseWave;
         }
       }
 
-      // Draw the squares
+      // Draw squares by connecting adjacent points
       for (let x = 0; x < gridWidth - 1; x++) {
         for (let y = 0; y < gridHeight - 1; y++) {
           const p1 = points[x][y];
@@ -302,7 +301,7 @@
           const p3 = points[x + 1][y + 1];
           const p4 = points[x][y + 1];
 
-          // Project to 2D
+          // Project 3D -> 2D
           const projP1 = project(p1.x, p1.y, p1.z);
           const projP2 = project(p2.x, p2.y, p2.z);
           const projP3 = project(p3.x, p3.y, p3.z);
@@ -311,6 +310,7 @@
           // Skip drawing if offscreen
           if (isOffScreen(projP1, projP2, projP3, projP4)) continue;
 
+          // Draw the quadrilateral
           ctx.beginPath();
           ctx.moveTo(projP1.x, projP1.y);
           ctx.lineTo(projP2.x, projP2.y);
@@ -318,7 +318,7 @@
           ctx.lineTo(projP4.x, projP4.y);
           ctx.closePath();
 
-          // Draw with faint white strokes
+          // Light stroke
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           ctx.lineWidth = 1;
           ctx.stroke();
