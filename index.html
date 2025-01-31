@@ -1,23 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Basic Meta Tags -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>eduardo sanches</title>
-  <!-- Fonts, Favicon, etc. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>eduardo sanches</title>
+  <meta name="description" content="A collection of important links for Eduardo Sanches." />
+  <meta name="keywords" content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="favicon.png" type="image/png" />
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Gloock:wght@700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    integrity="sha512-xOolHFLEhXw6tJPmAgKpJNfziUWTP0Ai8txM8JZ+2HmKoIE9OxKYq9E7RhxCl9TNP/ikZ1CAnYlTx8Fa4l8ESQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- CSS Styles -->
   <style>
     /* Body Styles */
     body {
       font-family: 'Roboto', Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
+      background-color: #000000;
+      color: #ffffff;
       text-align: center;
-      padding: 50px;
       margin: 0;
+      padding: 50px;
       overflow: hidden;
       position: relative;
     }
+
     /* Canvas Styles */
     canvas#backgroundCanvas {
       position: fixed;
@@ -25,8 +48,9 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1;
+      z-index: -1; /* Send behind content */
     }
+
     /* Heading Styles */
     h1 {
       font-family: 'Gloock', serif;
@@ -34,20 +58,22 @@
       font-weight: 700;
       margin-bottom: 30px;
     }
-    /* Profile Image Styles (restored) */
+
+    /* Profile Image Styles */
     .profile-image {
       width: 150px;
-      height: 150px;           /* Add a fixed height to keep it perfectly circular. */
-      object-fit: cover;       /* Ensures the image covers the area without distortion. */
-      border-radius: 50%;
+      height: 150px;            /* Keep height the same as width for a perfect circle */
+      object-fit: cover;        /* Ensures the image doesn't stretch */
+      border-radius: 50%;       /* Circular shape */
       margin-bottom: 20px;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
       transition: box-shadow 0.3s ease;
-      z-index: 1;              /* Ensure it's above the canvas if needed. */
+      z-index: 1;
     }
     .profile-image:hover {
       box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
     }
+
     /* Links Container */
     .links {
       display: flex;
@@ -57,6 +83,7 @@
       max-width: 600px;
       margin: 0 auto;
     }
+
     /* Social Media Button Styles */
     .social-button {
       display: flex;
@@ -66,31 +93,35 @@
       width: 100%;
       max-width: 250px;
       background-color: rgba(255, 255, 255, 0.1);
-      color: #fff;
+      color: #ffffff;
       text-decoration: none;
       border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 25px;
       transition: all 0.3s ease;
       backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px); /* Safari support */
+      -webkit-backdrop-filter: blur(5px); /* Safari */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       font-size: 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+
     .social-button i {
       margin-right: 10px;
       font-size: 20px;
       transition: transform 0.3s ease;
     }
+
     .social-button:hover {
       background-color: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
       transform: translateY(-3px);
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
     }
+
     .social-button:hover i {
       transform: scale(1.2);
     }
+
     /* Responsive Styles */
     @media (max-width: 600px) {
       body {
@@ -144,22 +175,21 @@
     const canvas = document.getElementById('backgroundCanvas');
     const ctx = canvas.getContext('2d');
 
+    // Grid size lowered to improve performance
+    const gridSizeX = 50;
+    const gridSizeY = 50;
     const squareSize = 50;
     let points = [];
 
-    // Lower grid size to improve performance
-    const gridSizeX = 50;
-    const gridSizeY = 50;
+    // Perspective parameters
+    const cameraAngle = Math.PI / 4; // 45 degrees
+    const cameraHeight = 200;        // Height of the camera
+    const perspective = 800;         // Controls depth of the perspective
 
-    // Perspective params
-    const cameraAngle = Math.PI / 4; 
-    const cameraHeight = 200;        
-    const perspective = 800;         
+    let mouseX = 0;
+    let mouseY = 0;
 
-    let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', updateMousePosition);
-    document.addEventListener('touchmove', updateMousePosition, { passive: false });
-
+    // Update mouse position
     function updateMousePosition(e) {
       if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
@@ -169,7 +199,10 @@
         mouseY = e.clientY;
       }
     }
+    document.addEventListener('mousemove', updateMousePosition);
+    document.addEventListener('touchmove', updateMousePosition, { passive: false });
 
+    // Resize canvas to fill the window and init the grid
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -178,24 +211,26 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // Initialize the 3D grid points
     function initGrid() {
       points = [];
       for (let x = 0; x <= gridSizeX; x++) {
         points[x] = [];
         for (let y = 0; y <= gridSizeY; y++) {
           const xPos = (x - gridSizeX / 2) * squareSize;
-          const yPos = 0; 
+          const yPos = 0;
           const zPos = (y - gridSizeY / 2) * squareSize;
           points[x][y] = { x: xPos, y: yPos, z: zPos };
         }
       }
     }
 
+    // Convert (x, y, z) to 2D screen space
     function project(x, y, z) {
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
 
-      // Rotation around X-axis
+      // Rotate around X-axis
       const yRot = y * cosA - z * sinA;
       const zRot = y * sinA + z * cosA;
 
@@ -206,65 +241,74 @@
       };
     }
 
+    // Check if a quadrilateral is offscreen
     function isOffScreen(...corners) {
-      // bounding box check
       const xs = corners.map(p => p.x);
       const ys = corners.map(p => p.y);
       const minX = Math.min(...xs);
       const maxX = Math.max(...xs);
       const minY = Math.min(...ys);
       const maxY = Math.max(...ys);
+
+      // If the bounding box is fully outside, skip
       if (maxX < 0 || minX > canvas.width || maxY < 0 || minY > canvas.height) {
         return true;
       }
       return false;
     }
 
+    // Animate the grid
     function animate() {
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.001;
-      const amplitude = 20;
-      const waveLength = 300;
-      const influenceRadius = 200;
+      const amplitude = 20;       // Height of the wave
+      const waveLength = 300;     // Wave length factor
+      const influenceRadius = 200; // Mouse wave influence radius
 
       const gridWidth = points.length;
       const gridHeight = points[0].length;
 
-      // Update wave
+      // Update vertical wave (y) for each grid point
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
           const p = points[x][y];
-
           const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
+
+          // Base wave
           const defaultWave = Math.sin(distCenter / waveLength - time) * amplitude;
 
+          // Calculate mouse influence
           const projP = project(p.x, p.y, p.z);
           const dx = projP.x - mouseX;
           const dy = projP.y - mouseY;
           const distMouse = Math.sqrt(dx * dx + dy * dy);
-
           const influence = Math.max(0, influenceRadius - distMouse) / influenceRadius;
+
+          // Additional wave effect due to mouse
           const mouseWave = Math.sin(distCenter / waveLength - time) * amplitude * influence * 2;
 
+          // Combine effects
           p.y = defaultWave + mouseWave;
         }
       }
 
-      // Draw squares
+      // Draw the squares
       for (let x = 0; x < gridWidth - 1; x++) {
         for (let y = 0; y < gridHeight - 1; y++) {
           const p1 = points[x][y];
-          const p2 = points[x+1][y];
-          const p3 = points[x+1][y+1];
-          const p4 = points[x][y+1];
+          const p2 = points[x + 1][y];
+          const p3 = points[x + 1][y + 1];
+          const p4 = points[x][y + 1];
 
+          // Project to 2D
           const projP1 = project(p1.x, p1.y, p1.z);
           const projP2 = project(p2.x, p2.y, p2.z);
           const projP3 = project(p3.x, p3.y, p3.z);
           const projP4 = project(p4.x, p4.y, p4.z);
 
+          // Skip drawing if offscreen
           if (isOffScreen(projP1, projP2, projP3, projP4)) continue;
 
           ctx.beginPath();
@@ -274,6 +318,7 @@
           ctx.lineTo(projP4.x, projP4.y);
           ctx.closePath();
 
+          // Draw with faint white strokes
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           ctx.lineWidth = 1;
           ctx.stroke();
