@@ -4,9 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>eduardo sanches</title>
-  <!-- Other meta, fonts, etc. ... -->
+  <!-- Fonts, Favicon, etc. -->
 
   <style>
+    /* Body Styles */
     body {
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #000;
@@ -17,6 +18,7 @@
       overflow: hidden;
       position: relative;
     }
+    /* Canvas Styles */
     canvas#backgroundCanvas {
       position: fixed;
       top: 0;
@@ -25,36 +27,138 @@
       height: 100%;
       z-index: -1;
     }
-    /* etc... (Your existing styles) */
+    /* Heading Styles */
+    h1 {
+      font-family: 'Gloock', serif;
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    /* Profile Image Styles (restored) */
+    .profile-image {
+      width: 150px;
+      height: 150px;           /* Add a fixed height to keep it perfectly circular. */
+      object-fit: cover;       /* Ensures the image covers the area without distortion. */
+      border-radius: 50%;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      transition: box-shadow 0.3s ease;
+      z-index: 1;              /* Ensure it's above the canvas if needed. */
+    }
+    .profile-image:hover {
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+    /* Links Container */
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    /* Social Media Button Styles */
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px 25px;
+      width: 100%;
+      max-width: 250px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px); /* Safari support */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      font-size: 18px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .social-button i {
+      margin-right: 10px;
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+    .social-button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+    }
+    .social-button:hover i {
+      transform: scale(1.2);
+    }
+    /* Responsive Styles */
+    @media (max-width: 600px) {
+      body {
+        padding: 20px;
+      }
+      .social-button {
+        max-width: 200px;
+        padding: 12px 20px;
+        font-size: 16px;
+      }
+      h1 {
+        font-size: 36px;
+      }
+      .profile-image {
+        width: 120px;
+        height: 120px;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Canvas for Background Animation -->
   <canvas id="backgroundCanvas"></canvas>
-  <img src="profile.jpg" alt="Profile" class="profile-image" />
+
+  <!-- Profile Image -->
+  <img
+    src="profile.jpg"
+    alt="Profile picture of Eduardo Sanches"
+    class="profile-image"
+  />
+  <!-- Heading -->
   <h1>eduardo sanches</h1>
+  <!-- Links Section -->
   <div class="links">
-    <!-- Social links here -->
+    <a href="https://x.com/_eduardosanches" class="social-button" aria-label="X">
+      <i class="fab fa-x-twitter"></i> X
+    </a>
+    <a href="https://instagram.com/_eduardosanches" class="social-button" aria-label="Instagram">
+      <i class="fab fa-instagram"></i> Instagram
+    </a>
+    <a href="https://www.youtube.com/@eduardo_sanches" class="social-button" aria-label="YouTube">
+      <i class="fab fa-youtube"></i> YouTube
+    </a>
+    <a href="https://github.com/edusanches" class="social-button" aria-label="GitHub">
+      <i class="fab fa-github"></i> GitHub
+    </a>
   </div>
-  
+
+  <!-- JavaScript for Background Animation -->
   <script>
     const canvas = document.getElementById('backgroundCanvas');
     const ctx = canvas.getContext('2d');
-    
-    let gridSizeX = 50; 
-    let gridSizeY = 50; 
+
     const squareSize = 50;
     let points = [];
 
-    // Perspective parameters
-    const cameraAngle = Math.PI / 4; // 45 degrees
-    const cameraHeight = 200;
-    const perspective = 800;
+    // Lower grid size to improve performance
+    const gridSizeX = 50;
+    const gridSizeY = 50;
 
-    let mouseX = 0;
-    let mouseY = 0;
+    // Perspective params
+    const cameraAngle = Math.PI / 4; 
+    const cameraHeight = 200;        
+    const perspective = 800;         
 
+    let mouseX = 0, mouseY = 0;
     document.addEventListener('mousemove', updateMousePosition);
-    document.addEventListener('touchmove', updateMousePosition, {passive: false});
+    document.addEventListener('touchmove', updateMousePosition, { passive: false });
 
     function updateMousePosition(e) {
       if (e.touches && e.touches.length > 0) {
@@ -82,7 +186,7 @@
           const xPos = (x - gridSizeX / 2) * squareSize;
           const yPos = 0; 
           const zPos = (y - gridSizeY / 2) * squareSize;
-          points[x][y] = {x: xPos, y: yPos, z: zPos};
+          points[x][y] = { x: xPos, y: yPos, z: zPos };
         }
       }
     }
@@ -90,17 +194,20 @@
     function project(x, y, z) {
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
+
+      // Rotation around X-axis
       const yRot = y * cosA - z * sinA;
       const zRot = y * sinA + z * cosA;
 
       const scale = perspective / (perspective + zRot + cameraHeight);
       return {
         x: canvas.width / 2 + x * scale,
-        y: canvas.height / 2 + yRot * scale
+        y: canvas.height / 2 + yRot * scale,
       };
     }
 
     function isOffScreen(...corners) {
+      // bounding box check
       const xs = corners.map(p => p.x);
       const ys = corners.map(p => p.y);
       const minX = Math.min(...xs);
@@ -113,14 +220,8 @@
       return false;
     }
 
-    let frameCount = 0;
     function animate() {
       requestAnimationFrame(animate);
-
-      // Throttle the frame rate if needed (e.g., run at ~30 FPS)
-      frameCount++;
-      // if (frameCount % 2 !== 0) return; // Uncomment to skip every other frame
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const time = Date.now() * 0.001;
@@ -131,21 +232,21 @@
       const gridWidth = points.length;
       const gridHeight = points[0].length;
 
+      // Update wave
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
           const p = points[x][y];
-          const distanceFromCenter = Math.sqrt(p.x * p.x + p.z * p.z);
 
-          // Base wave
-          const defaultWave = Math.sin(distanceFromCenter / waveLength - time) * amplitude;
+          const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
+          const defaultWave = Math.sin(distCenter / waveLength - time) * amplitude;
+
           const projP = project(p.x, p.y, p.z);
+          const dx = projP.x - mouseX;
+          const dy = projP.y - mouseY;
+          const distMouse = Math.sqrt(dx * dx + dy * dy);
 
-          // Mouse wave influence
-          const dxMouse = projP.x - mouseX;
-          const dyMouse = projP.y - mouseY;
-          const distanceToMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
-          const influence = Math.max(0, influenceRadius - distanceToMouse) / influenceRadius;
-          const mouseWave = Math.sin(distanceFromCenter / waveLength - time) * amplitude * influence * 2;
+          const influence = Math.max(0, influenceRadius - distMouse) / influenceRadius;
+          const mouseWave = Math.sin(distCenter / waveLength - time) * amplitude * influence * 2;
 
           p.y = defaultWave + mouseWave;
         }
@@ -155,16 +256,15 @@
       for (let x = 0; x < gridWidth - 1; x++) {
         for (let y = 0; y < gridHeight - 1; y++) {
           const p1 = points[x][y];
-          const p2 = points[x + 1][y];
-          const p3 = points[x + 1][y + 1];
-          const p4 = points[x][y + 1];
+          const p2 = points[x+1][y];
+          const p3 = points[x+1][y+1];
+          const p4 = points[x][y+1];
 
           const projP1 = project(p1.x, p1.y, p1.z);
           const projP2 = project(p2.x, p2.y, p2.z);
           const projP3 = project(p3.x, p3.y, p3.z);
           const projP4 = project(p4.x, p4.y, p4.z);
 
-          // Skip drawing if it's entirely offscreen
           if (isOffScreen(projP1, projP2, projP3, projP4)) continue;
 
           ctx.beginPath();
@@ -182,6 +282,4 @@
     }
 
     animate();
-  </script>
-</body>
-</html>
+  </script
