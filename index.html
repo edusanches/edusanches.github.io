@@ -66,7 +66,6 @@
       margin: 0 auto;
     }
     .social-button {
-      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -85,42 +84,25 @@
       font-size: 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    
     .social-button i {
       margin-right: 10px;
       font-size: 20px;
       transition: transform 0.3s ease;
     }
-    
     .social-button:hover {
       background-color: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
       transform: translateY(-3px);
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
     }
-    
     .social-button:hover i {
       transform: scale(1.2);
     }
-    
-    /* Glow Effect with Rounded Corners */
-    .social-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: 25px; /* Matches the button’s border-radius */
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5), transparent);
-      filter: blur(10px);
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .social-button:hover::before {
-      opacity: 1;
+    @media (max-width: 600px) {
+      body { padding: 20px; }
+      .social-button { max-width: 200px; padding: 12px 20px; font-size: 16px; }
+      h1 { font-size: 36px; }
+      .profile-image { width: 120px; height: 120px; }
     }
   </style>
 </head>
@@ -231,7 +213,12 @@
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw Glow Effect for Buttons
+    // Main animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+      // Draw glow effect inside buttons when mouse is near
       buttons.forEach(button => {
         const rect = button.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -239,21 +226,24 @@
         const dx = mouseX - centerX;
         const dy = mouseY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 500;
-
+        const maxDist = 500; // Distance threshold for glow activation
+    
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
           ctx.save();
-          ctx.beginPath();
-          ctx.rect(rect.left, rect.top, rect.width, rect.height);
+          // Define and clip to the rounded rectangle
+          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25);
           ctx.clip();
+          // Set transparency based on distance
           ctx.globalAlpha = intensity;
-          const glowRadius = 100;
+          // Create radial gradient centered at mouse position
+          const glowRadius = 100; // Size of the glow effect
           const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
           ctx.fillStyle = gradient;
-          ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+          // Fill the clipped path with the gradient
+          ctx.fill();
           ctx.restore();
         }
       });
