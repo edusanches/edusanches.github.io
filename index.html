@@ -269,7 +269,7 @@
         const dx = mouseX - centerX;
         const dy = mouseY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 100; // Distance threshold for glow activation
+        const maxDist = 500; // Distance threshold for glow activation
 
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
@@ -310,7 +310,7 @@
       }
 
       // Draw checkered lines
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
       ctx.lineWidth = 1;
 
       for (let x = 0; x < gridWidth; x++) {
