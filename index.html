@@ -68,9 +68,9 @@
     /* Profile Image Styles */
     .profile-image {
       width: 150px;
-      height: 150px;         /* Keep height = width for a perfect circle */
-      object-fit: cover;     /* Ensures the image doesn't stretch */
-      border-radius: 50%;    /* Circular shape */
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
       margin-bottom: 20px;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
       transition: box-shadow 0.3s ease;
@@ -175,15 +175,8 @@
     </a>
   </div>
 
-  <!-- JavaScript for the New 3D Wavy Checkered Background -->
+  <!-- JavaScript for Background Animation with Glow Effect -->
   <script>
-    /** 
-     * A new approach: 
-     * We'll create a wide 2D grid of points, apply a wave function in the Y dimension,
-     * then project them to 2D with perspective. We'll draw only the lines to form
-     * a checkered pattern with no fill, in white, and let the mouse influence waves.
-     */
-
     const canvas = document.getElementById("backgroundCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -192,14 +185,14 @@
     let mouseY = 0;
 
     // Grid & wave configuration
-    const squareSize = 50;         // Distance between points in the plane
-    const baseAmplitude = 20;      // Base wave amplitude
-    const waveLength = 300;        // Distance factor for wave
-    const mouseInfluenceRadius = 200; // Mouse ripple radius
+    const squareSize = 50;
+    const baseAmplitude = 20;
+    const waveLength = 300;
+    const mouseInfluenceRadius = 200;
     let gridWidth, gridHeight;
 
     // Perspective / camera config
-    let cameraAngle = Math.PI / 4; // 45 deg
+    let cameraAngle = Math.PI / 4;
     let cameraHeight = 100;
     let perspective = 800;
 
@@ -228,18 +221,17 @@
     // Create a large enough grid
     function createGrid() {
       points = [];
-      const margin = 20; // Extra squares around the screen
+      const margin = 20;
       const baseX = Math.ceil(canvas.width / squareSize);
       const baseY = Math.ceil(canvas.height / squareSize);
       gridWidth = baseX + margin;
       gridHeight = baseY + margin;
 
-      // Generate x, y, z for each point in the plane
       for (let x = 0; x <= gridWidth; x++) {
         points[x] = [];
         for (let y = 0; y <= gridHeight; y++) {
           const xPos = (x - gridWidth / 2) * squareSize;
-          const yPos = 0; 
+          const yPos = 0;
           const zPos = (y - gridHeight / 2) * squareSize;
           points[x][y] = { x: xPos, y: yPos, z: zPos };
         }
@@ -251,7 +243,6 @@
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
 
-      // Rotate around X-axis
       const yRot = y * cosA - z * sinA;
       const zRot = y * sinA + z * cosA;
 
@@ -267,6 +258,14 @@
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Draw background glow
+      const glowRadius = 200;
+      const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
+      gradient.addColorStop(0, "rgba(255, 255, 255, 0.3)");
+      gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       const time = Date.now() * 0.001;
 
       // Update wave for each point
@@ -274,11 +273,9 @@
         for (let y = 0; y <= gridHeight; y++) {
           const p = points[x][y];
 
-          // Base wave (distance from center in XZ-plane)
           const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
           const waveValue = Math.sin(distCenter / waveLength - time) * baseAmplitude;
 
-          // Mouse influence
           const screenPos = project3D(p.x, p.y, p.z);
           const dx = screenPos.x - mouseX;
           const dy = screenPos.y - mouseY;
@@ -286,23 +283,20 @@
           const influence = Math.max(0, mouseInfluenceRadius - distMouse) / mouseInfluenceRadius;
           const mouseWave = waveValue * influence * 2;
 
-          // Final Y 
           p.y = waveValue + mouseWave;
         }
       }
 
-      // Draw checkered lines in white
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      // Draw checkered lines
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
       ctx.lineWidth = 1;
 
-      // Draw squares by connecting adjacent points horizontally + vertically
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
           const p1 = points[x][y];
           const p2 = points[x + 1][y];
           const p3 = points[x][y + 1];
 
-          // Project to 2D
           const projP1 = project3D(p1.x, p1.y, p1.z);
 
           if (p2) {
