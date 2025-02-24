@@ -213,12 +213,7 @@
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Main animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-      // Draw glow effect inside buttons when mouse is near
+      // Draw Glow Effect for Buttons
       buttons.forEach(button => {
         const rect = button.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -226,24 +221,21 @@
         const dx = mouseX - centerX;
         const dy = mouseY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 500; // Distance threshold for glow activation
-    
+        const maxDist = 500;
+
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
           ctx.save();
-          // Define and clip to the rounded rectangle
-          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25);
+          ctx.beginPath();
+          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25); // Match button's border-radius
           ctx.clip();
-          // Set transparency based on distance
           ctx.globalAlpha = intensity;
-          // Create radial gradient centered at mouse position
-          const glowRadius = 100; // Size of the glow effect
+          const glowRadius = 100;
           const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
           ctx.fillStyle = gradient;
-          // Fill the clipped path with the gradient
-          ctx.fill();
+          ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
           ctx.restore();
         }
       });
