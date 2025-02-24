@@ -278,7 +278,7 @@
           ctx.rect(rect.left, rect.top, rect.width, rect.height);
           ctx.clip();
           ctx.globalAlpha = intensity;
-          const glowRadius = 50; // Size of the glow effect
+          const glowRadius = 100; // Size of the glow effect
           const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
