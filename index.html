@@ -221,10 +221,10 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Create a large enough grid
+    // Create a larger grid to cover the entire canvas
     function createGrid() {
       points = [];
-      const margin = 20;
+      const margin = 40; // Increased margin for larger grid
       const baseX = Math.ceil(canvas.width / squareSize);
       const baseY = Math.ceil(canvas.height / squareSize);
       gridWidth = baseX + margin;
@@ -233,9 +233,9 @@
       for (let x = 0; x <= gridWidth; x++) {
         points[x] = [];
         for (let y = 0; y <= gridHeight; y++) {
-          const xPos = (x - gridWidth / 2) * squareSize;
+          const xPos = (x - gridWidth / 2) * squareSize * 2; // Scaled to cover more area
           const yPos = 0;
-          const zPos = (y - gridHeight / 2) * squareSize;
+          const zPos = (y - gridHeight / 2) * squareSize * 2; // Scaled to cover more area
           points[x][y] = { x: xPos, y: yPos, z: zPos };
         }
       }
@@ -256,6 +256,21 @@
       };
     }
 
+    // Function to draw a rounded rectangle path
+    function roundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
     // Main animation loop
     function animate() {
       requestAnimationFrame(animate);
@@ -274,8 +289,7 @@
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
           ctx.save();
-          ctx.beginPath();
-          ctx.rect(rect.left, rect.top, rect.width, rect.height);
+          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25); // Match button's border-radius
           ctx.clip();
           ctx.globalAlpha = intensity;
           const glowRadius = 100; // Size of the glow effect
