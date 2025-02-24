@@ -6,36 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>eduardo sanches</title>
-  <meta
-    name="description"
-    content="A collection of important links for Eduardo Sanches."
-  />
-  <meta
-    name="keywords"
-    content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube"
-  />
+  <meta name="description" content="A collection of important links for Eduardo Sanches." />
+  <meta name="keywords" content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube" />
 
   <!-- Favicon -->
   <link rel="icon" href="favicon.png" type="image/png" />
 
   <!-- Google Fonts -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto&family=Gloock:wght@700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Gloock:wght@700&display=swap" rel="stylesheet" />
 
   <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-    integrity="sha512-xOolHFLEhXw6tJPmAgKpJNfziUWTP0Ai8txM8JZ+2HmKoIE9OxKYq9E7RhxCl9TNP/ikZ1CAnYlTx8Fa4l8ESQ=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-xOolHFLEhXw6tJPmAgKpJNfziUWTP0Ai8txM8JZ+2HmKoIE9OxKYq9E7RhxCl9TNP/ikZ1CAnYlTx8Fa4l8ESQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- CSS Styles -->
   <style>
-    /* Body Styles */
     body {
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #000000;
@@ -46,26 +30,20 @@
       overflow: hidden;
       position: relative;
     }
-
-    /* Full-Screen Canvas */
     canvas#backgroundCanvas {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1; /* Send behind content */
+      z-index: -1;
     }
-
-    /* Heading Styles */
     h1 {
       font-family: 'Gloock', serif;
       font-size: 48px;
       font-weight: 700;
       margin-bottom: 30px;
     }
-
-    /* Profile Image Styles */
     .profile-image {
       width: 150px;
       height: 150px;
@@ -79,8 +57,6 @@
     .profile-image:hover {
       box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
     }
-
-    /* Links Container */
     .links {
       display: flex;
       flex-wrap: wrap;
@@ -89,8 +65,6 @@
       max-width: 600px;
       margin: 0 auto;
     }
-
-    /* Social Media Button Styles */
     .social-button {
       display: flex;
       align-items: center;
@@ -108,8 +82,7 @@
       -webkit-backdrop-filter: blur(5px);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       font-size: 18px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .social-button i {
       margin-right: 10px;
@@ -125,24 +98,11 @@
     .social-button:hover i {
       transform: scale(1.2);
     }
-
-    /* Responsive Styles */
     @media (max-width: 600px) {
-      body {
-        padding: 20px;
-      }
-      .social-button {
-        max-width: 200px;
-        padding: 12px 20px;
-        font-size: 16px;
-      }
-      h1 {
-        font-size: 36px;
-      }
-      .profile-image {
-        width: 120px;
-        height: 120px;
-      }
+      body { padding: 20px; }
+      .social-button { max-width: 200px; padding: 12px 20px; font-size: 16px; }
+      h1 { font-size: 36px; }
+      .profile-image { width: 120px; height: 120px; }
     }
   </style>
 </head>
@@ -151,11 +111,7 @@
   <canvas id="backgroundCanvas"></canvas>
 
   <!-- Profile Image -->
-  <img
-    src="profile.jpg"
-    alt="Profile picture of Eduardo Sanches"
-    class="profile-image"
-  />
+  <img src="profile.jpg" alt="Profile picture of Eduardo Sanches" class="profile-image" />
   <!-- Heading -->
   <h1>eduardo sanches</h1>
 
@@ -175,7 +131,7 @@
     </a>
   </div>
 
-  <!-- JavaScript for Background Animation with Glow Effect -->
+  <!-- JavaScript for Background Animation -->
   <script>
     const canvas = document.getElementById("backgroundCanvas");
     const ctx = canvas.getContext("2d");
@@ -183,23 +139,17 @@
     let points = [];
     let mouseX = 0;
     let mouseY = 0;
-
-    // Select all social media buttons
     const buttons = document.querySelectorAll('.social-button');
-
-    // Grid & wave configuration
     const squareSize = 50;
-    const baseAmplitude = 20;
+    const baseAmplitude = 10; // Reduced to prevent excessive deformation
     const waveLength = 300;
     const mouseInfluenceRadius = 200;
     let gridWidth, gridHeight;
-
-    // Perspective / camera config
     let cameraAngle = Math.PI / 4;
     let cameraHeight = 100;
-    let perspective = 800;
+    let perspective = 1600; // Increased to reduce distortion
 
-    // Listen for mouse/touch
+    // Mouse/Touch Tracking
     function updateMousePosition(e) {
       if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
@@ -212,7 +162,7 @@
     document.addEventListener("mousemove", updateMousePosition);
     document.addEventListener("touchmove", updateMousePosition, { passive: false });
 
-    // Resize & init
+    // Resize Canvas
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -221,10 +171,10 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Create a larger grid to cover the entire canvas
+    // Create Grid with Depth Limitation
     function createGrid() {
       points = [];
-      const margin = 40; // Increased margin for larger grid
+      const margin = 20;
       const baseX = Math.ceil(canvas.width / squareSize);
       const baseY = Math.ceil(canvas.height / squareSize);
       gridWidth = baseX + margin;
@@ -233,50 +183,37 @@
       for (let x = 0; x <= gridWidth; x++) {
         points[x] = [];
         for (let y = 0; y <= gridHeight; y++) {
-          const xPos = (x - gridWidth / 2) * squareSize * 2; // Scaled to cover more area
+          const xPos = (x - gridWidth / 2) * squareSize;
           const yPos = 0;
-          const zPos = (y - gridHeight / 2) * squareSize * 2; // Scaled to cover more area
-          points[x][y] = { x: xPos, y: yPos, z: zPos };
+          const zPos = (y - gridHeight / 2) * squareSize;
+          // Only include points within a reasonable z-range
+          if (Math.abs(zPos) < 1000) {
+            points[x][y] = { x: xPos, y: yPos, z: zPos };
+          }
         }
       }
     }
 
-    // Perspective projection
+    // Perspective Projection
     function project3D(x, y, z) {
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
-
       const yRot = y * cosA - z * sinA;
       const zRot = y * sinA + z * cosA;
-
       const scale = perspective / (perspective + zRot + cameraHeight);
       return {
         x: canvas.width / 2 + x * scale,
-        y: canvas.height / 2 + yRot * scale
+        y: canvas.height / 2 + yRot * scale,
+        zRot: zRot // For depth-based rendering
       };
     }
 
-    // Function to draw a rounded rectangle path
-    function roundedRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
-
-    // Main animation loop
+    // Animation Loop
     function animate() {
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw glow effect inside buttons when mouse is near
+      // Draw Glow Effect for Buttons
       buttons.forEach(button => {
         const rect = button.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -284,15 +221,16 @@
         const dx = mouseX - centerX;
         const dy = mouseY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 500; // Distance threshold for glow activation
+        const maxDist = 500;
 
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
           ctx.save();
-          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25); // Match button's border-radius
+          ctx.beginPath();
+          ctx.rect(rect.left, rect.top, rect.width, rect.height);
           ctx.clip();
           ctx.globalAlpha = intensity;
-          const glowRadius = 100; // Size of the glow effect
+          const glowRadius = 100;
           const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
@@ -304,50 +242,57 @@
 
       const time = Date.now() * 0.001;
 
-      // Update wave for each point
+      // Update Wave Positions
       for (let x = 0; x <= gridWidth; x++) {
         for (let y = 0; y <= gridHeight; y++) {
-          const p = points[x][y];
-
-          const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
-          const waveValue = Math.sin(distCenter / waveLength - time) * baseAmplitude;
-
-          const screenPos = project3D(p.x, p.y, p.z);
-          const dx = screenPos.x - mouseX;
-          const dy = screenPos.y - mouseY;
-          const distMouse = Math.sqrt(dx * dx + dy * dy);
-          const influence = Math.max(0, mouseInfluenceRadius - distMouse) / mouseInfluenceRadius;
-          const mouseWave = waveValue * influence * 2;
-
-          p.y = waveValue + mouseWave;
+          if (points[x][y]) {
+            const p = points[x][y];
+            const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
+            const waveValue = Math.sin(distCenter / waveLength - time) * baseAmplitude;
+            const screenPos = project3D(p.x, p.y, p.z);
+            const dx = screenPos.x - mouseX;
+            const dy = screenPos.y - mouseY;
+            const distMouse = Math.sqrt(dx * dx + dy * dy);
+            const influence = Math.max(0, mouseInfluenceRadius - distMouse) / mouseInfluenceRadius;
+            const mouseWave = waveValue * influence * 2;
+            p.y = waveValue + mouseWave;
+          }
         }
       }
 
-      // Draw checkered lines
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      // Draw Grid Lines with Depth Limitation and Fog
       ctx.lineWidth = 1;
-
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
-          const p1 = points[x][y];
-          const p2 = points[x + 1][y];
-          const p3 = points[x][y + 1];
-
-          const projP1 = project3D(p1.x, p1.y, p1.z);
-
-          if (p2) {
+          if (points[x][y] && points[x + 1][y]) {
+            const p1 = points[x][y];
+            const p2 = points[x + 1][y];
+            const projP1 = project3D(p1.x, p1.y, p1.z);
             const projP2 = project3D(p2.x, p2.y, p2.z);
-            ctx.beginPath();
-            ctx.moveTo(projP1.x, projP1.y);
-            ctx.lineTo(projP2.x, projP2.y);
-            ctx.stroke();
+            const avgZRot = (projP1.zRot + projP2.zRot) / 2;
+            if (avgZRot < 1000) { // Limit depth
+              const opacity = Math.max(0, 1 - Math.abs(avgZRot) / 1000); // Fog effect
+              ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.1})`;
+              ctx.beginPath();
+              ctx.moveTo(projP1.x, projP1.y);
+              ctx.lineTo(projP2.x, projP2.y);
+              ctx.stroke();
+            }
           }
-          if (p3) {
+          if (points[x][y] && points[x][y + 1]) {
+            const p1 = points[x][y];
+            const p3 = points[x][y + 1];
+            const projP1 = project3D(p1.x, p1.y, p1.z);
             const projP3 = project3D(p3.x, p3.y, p3.z);
-            ctx.beginPath();
-            ctx.moveTo(projP1.x, projP1.y);
-            ctx.lineTo(projP3.x, projP3.y);
-            ctx.stroke();
+            const avgZRot = (projP1.zRot + projP3.zRot) / 2;
+            if (avgZRot < 1000) { // Limit depth
+              const opacity = Math.max(0, 1 - Math.abs(avgZRot) / 1000); // Fog effect
+              ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.1})`;
+              ctx.beginPath();
+              ctx.moveTo(projP1.x, projP1.y);
+              ctx.lineTo(projP3.x, projP3.y);
+              ctx.stroke();
+            }
           }
         }
       }
