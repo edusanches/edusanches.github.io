@@ -131,7 +131,7 @@
     </a>
   </div>
 
-  <!-- JavaScript for Background Animation -->
+  <!-- JavaScript for Background Animation with Glow Effect -->
   <script>
     const canvas = document.getElementById("backgroundCanvas");
     const ctx = canvas.getContext("2d");
@@ -139,17 +139,23 @@
     let points = [];
     let mouseX = 0;
     let mouseY = 0;
+
+    // Select all social media buttons
     const buttons = document.querySelectorAll('.social-button');
+
+    // Grid & wave configuration
     const squareSize = 50;
     const baseAmplitude = 10; // Reduced to prevent excessive deformation
     const waveLength = 300;
     const mouseInfluenceRadius = 200;
     let gridWidth, gridHeight;
+
+    // Perspective / camera config
     let cameraAngle = Math.PI / 4;
     let cameraHeight = 100;
     let perspective = 1600; // Increased to reduce distortion
 
-    // Mouse/Touch Tracking
+    // Listen for mouse/touch
     function updateMousePosition(e) {
       if (e.touches && e.touches.length > 0) {
         mouseX = e.touches[0].clientX;
@@ -162,7 +168,7 @@
     document.addEventListener("mousemove", updateMousePosition);
     document.addEventListener("touchmove", updateMousePosition, { passive: false });
 
-    // Resize Canvas
+    // Resize & init
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -171,7 +177,7 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Create Grid with Depth Limitation
+    // Create a large enough grid with depth limitation
     function createGrid() {
       points = [];
       const margin = 20;
@@ -186,20 +192,21 @@
           const xPos = (x - gridWidth / 2) * squareSize;
           const yPos = 0;
           const zPos = (y - gridHeight / 2) * squareSize;
-          // Only include points within a reasonable z-range
-          if (Math.abs(zPos) < 1000) {
+          if (Math.abs(zPos) < 1000) { // Limit depth
             points[x][y] = { x: xPos, y: yPos, z: zPos };
           }
         }
       }
     }
 
-    // Perspective Projection
+    // Perspective projection
     function project3D(x, y, z) {
       const cosA = Math.cos(cameraAngle);
       const sinA = Math.sin(cameraAngle);
+
       const yRot = y * cosA - z * sinA;
       const zRot = y * sinA + z * cosA;
+
       const scale = perspective / (perspective + zRot + cameraHeight);
       return {
         x: canvas.width / 2 + x * scale,
@@ -208,12 +215,27 @@
       };
     }
 
-    // Animation Loop
+    // Function to draw a rounded rectangle path
+    function roundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // Main animation loop
     function animate() {
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw Glow Effect for Buttons
+      // Draw glow effect inside buttons when mouse is near
       buttons.forEach(button => {
         const rect = button.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -221,16 +243,15 @@
         const dx = mouseX - centerX;
         const dy = mouseY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 500;
+        const maxDist = 500; // Distance threshold for glow activation
 
         if (dist < maxDist) {
           const intensity = 1 - dist / maxDist;
           ctx.save();
-          ctx.beginPath();
           roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25); // Match button's border-radius
           ctx.clip();
           ctx.globalAlpha = intensity;
-          const glowRadius = 100;
+          const glowRadius = 100; // Size of the glow effect
           const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
           gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
@@ -242,25 +263,28 @@
 
       const time = Date.now() * 0.001;
 
-      // Update Wave Positions
+      // Update wave for each point
       for (let x = 0; x <= gridWidth; x++) {
         for (let y = 0; y <= gridHeight; y++) {
           if (points[x][y]) {
             const p = points[x][y];
+
             const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
             const waveValue = Math.sin(distCenter / waveLength - time) * baseAmplitude;
+
             const screenPos = project3D(p.x, p.y, p.z);
             const dx = screenPos.x - mouseX;
             const dy = screenPos.y - mouseY;
             const distMouse = Math.sqrt(dx * dx + dy * dy);
             const influence = Math.max(0, mouseInfluenceRadius - distMouse) / mouseInfluenceRadius;
             const mouseWave = waveValue * influence * 2;
+
             p.y = waveValue + mouseWave;
           }
         }
       }
 
-      // Draw Grid Lines with Depth Limitation and Fog
+      // Draw checkered lines with depth limitation and fog
       ctx.lineWidth = 1;
       for (let x = 0; x < gridWidth; x++) {
         for (let y = 0; y < gridHeight; y++) {
