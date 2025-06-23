@@ -1,0 +1,257 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Análise de Solo da Fazenda</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+        #container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+        }
+        #sidebar {
+            flex: 1;
+            max-width: 300px;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            margin-right: 20px;
+        }
+        #chartContainer {
+            flex: 3;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        input, select, button {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            padding: 5px;
+            margin: 5px 0;
+        }
+        label {
+            margin-right: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Análise de Solo da Fazenda</h1>
+    <input type="file" id="csvFile">
+    <p>Para carregar o CSV automaticamente, certifique-se de que o arquivo "Análises da fazenda.csv" esteja na mesma pasta e sirva os arquivos via servidor local (ex: <code>python -m http.server</code>).</p>
+    <div id="container">
+        <div id="sidebar">
+            <div id="talhaoSelection"></div>
+            <label for="variableSelect">Variável:</label>
+            <select id="variableSelect"></select>
+        </div>
+        <div id="chartContainer">
+            <canvas id="chart"></canvas>
+        </div>
+    </div>
+    <script>
+        let data;
+        let chart;
+
+        document.getElementById('csvFile').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    processCSV(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        fetch('Análises da fazenda.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                processCSV(csvText);
+            })
+            .catch(error => {
+                console.log('CSV não encontrado ou não servido via HTTP. Use o upload manual.');
+            });
+
+        function processCSV(csvText) {
+            const lines = csvText.split('\n');
+            const header = lines[0].split(';').map(col => col.trim());
+            data = lines.slice(1).map(line => {
+                const cells = line.split(';');
+                return header.reduce((obj, col, index) => {
+                    obj[col] = index >= 4 ? parseFloat((cells[index] || '').replace(',', '.')) : (cells[index] || '');
+                    return obj;
+                }, {});
+            });
+
+            // Extrair talhões únicos, ignorando valores inválidos
+            const talhoes = [...new Set(data.map(row => row['Talhão']))]
+                .filter(talhao => talhao && talhao !== 'Talhão' && !isNaN(parseFloat(talhao)))
+                .sort((a, b) => a - b);
+
+            // Preencher a seleção de talhões
+            const talhaoSelection = document.getElementById('talhaoSelection');
+            talhaoSelection.innerHTML = '<h3>Talhões</h3>';
+            talhoes.forEach(talhao => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = talhao;
+                checkbox.checked = true;
+                checkbox.id = `talhao_${talhao}`;
+                const label = document.createElement('label');
+                label.htmlFor = `talhao_${talhao}`;
+                label.textContent = `Talhão ${talhao}`;
+                talhaoSelection.appendChild(checkbox);
+                talhaoSelection.appendChild(label);
+                talhaoSelection.appendChild(document.createElement('br'));
+            });
+
+            // Extrair variáveis (a partir da quinta coluna)
+            const variables = header.slice(4);
+            // Preencher o dropdown de variáveis
+            const select = document.getElementById('variableSelect');
+            select.innerHTML = '';
+            variables.forEach(varName => {
+                const option = document.createElement('option');
+                option.value = varName;
+                option.textContent = varName;
+                select.appendChild(option);
+            });
+
+            // Configurar listeners de eventos
+            document.getElementById('sidebar').addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' || e.target.id === 'variableSelect') {
+                    updateGraph();
+                }
+            });
+
+            // Inicializar o gráfico
+            updateGraph();
+        }
+
+        function updateGraph() {
+            if (!data) return;
+            // Obter talhões selecionados
+            const selectedTalhoes = Array.from(document.querySelectorAll('#talhaoSelection input[type="checkbox"]:checked')).map(cb => cb.value);
+            // Obter variável selecionada
+            const variable = document.getElementById('variableSelect').value;
+            // Obter anos únicos
+            const uniqueYears = [...new Set(data.map(row => row['Ano']))].sort();
+            // Calcular médias para os talhões selecionados
+            const superficialData = uniqueYears.map(year => {
+                const values = data.filter(row => row['Ano'] === year && row['Profundidade'] === 'Superficial' && selectedTalhoes.includes(row['Talhão']))
+                    .map(row => row[variable])
+                    .filter(val => !isNaN(val));
+                return values.length > 0 ? values.reduce((a, b) => a + b) / values.length : null;
+            });
+            const deepData = uniqueYears.map(year => {
+                const values = data.filter(row => row['Ano'] === year && row['Profundidade'] === 'Profundo' && selectedTalhoes.includes(row['Talhão']))
+                    .map(row => row[variable])
+                    .filter(val => !isNaN(val));
+                return values.length > 0 ? values.reduce((a, b) => a + b) / values.length : null;
+            });
+            // Atualizar o gráfico
+            if (chart) chart.destroy();
+            const ctx = document.getElementById('chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: uniqueYears,
+                    datasets: [
+                        {
+                            label: 'Superficial',
+                            data: superficialData,
+                            borderColor: 'blue',
+                            backgroundColor: 'blue',
+                            pointRadius: 5,
+                        },
+                        {
+                            label: 'Profundo',
+                            data: deepData,
+                            borderColor: 'red',
+                            backgroundColor: 'red',
+                            pointRadius: 5,
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: variable
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Análise de ${variable} por Talhão`
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
