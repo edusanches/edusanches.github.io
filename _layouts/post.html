@@ -35,6 +35,14 @@ layout: base
     a.href = "#" + el.id;
     a.textContent = el.textContent;
     if (cls) a.className = cls;
+    if (cls === "top") {
+      // The title scrolls to the very top of the page (shows the header too)
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        window.scrollTo({ top: 0 });
+        if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+      });
+    }
     var li = document.createElement("li");
     li.appendChild(a);
     ul.appendChild(li);
