@@ -96,31 +96,30 @@
       display: block;
       margin: 0 auto 22px;
       cursor: pointer;
+      perspective: 600px;                 /* real depth for the push-in */
     }
-    /* Soft halo behind the photo — blooms on hover */
+    /* Soft halo behind the photo — opens up as the photo recedes */
     .avatar::before {
       content: "";
       position: absolute;
       inset: -14px;
       border-radius: 50%;
       z-index: -1;
-      background: radial-gradient(closest-side, rgba(245, 246, 247, 0.32), transparent 77%);
-      opacity: 0.5;
+      background: radial-gradient(closest-side, rgba(245, 246, 247, 0.3), transparent 77%);
+      opacity: 0.55;
       pointer-events: none;
-      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
     }
-    /* Diagonal light glint that sweeps across the photo on hover */
+    /* Rim shadow that recedes with the photo — sets it into a recess */
     .avatar::after {
       content: "";
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.4) 50%, transparent 62%);
-      background-size: 250% 250%;
-      background-position: 150% 0;
+      background: radial-gradient(closest-side, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
     }
     .profile-image {
       width: 100%;
@@ -128,25 +127,21 @@
       object-fit: cover;
       border-radius: 50%;
       display: block;
-      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.4s ease;
+      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.5s ease;
     }
     @media (hover: hover) {
       .avatar:hover .profile-image {
-        transform: scale(1.05);
-        filter: saturate(1.08) brightness(1.06);
-      }
-      .avatar:hover::before {
-        opacity: 1;
-        transform: scale(1.18);
+        transform: translateZ(-65px);     /* sinks into the scene */
+        filter: brightness(0.84) saturate(0.95);
       }
       .avatar:hover::after {
+        transform: translateZ(-65px);     /* travels with the photo, framing it */
         opacity: 1;
-        animation: avatarSheen 0.85s ease;
       }
-    }
-    @keyframes avatarSheen {
-      from { background-position: 150% 0; }
-      to   { background-position: -60% 0; }
+      .avatar:hover::before {
+        transform: scale(1.42);           /* halo opens outward */
+        opacity: 0.95;
+      }
     }
 
     h1 {
@@ -239,8 +234,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
-      .avatar:hover .profile-image, .avatar:hover::before { transform: none; }
-      .avatar:hover::after { animation: none; opacity: 0; }
+      .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
     }
   </style>
 </head>
