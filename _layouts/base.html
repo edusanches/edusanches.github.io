@@ -25,7 +25,7 @@
       --line:  rgba(245, 246, 247, 0.12);
     }
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; background: #0a0a0b; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -59,20 +59,18 @@
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
 
 
-    /* Cross-page content transition (works in every browser): content slides
-       out on exit and in on arrival — up toward the blog, down back to home. */
-    @keyframes c-in-up    { from { opacity: 0; transform: translateY(24px); } }
-    @keyframes c-in-down  { from { opacity: 0; transform: translateY(-24px); } }
-    @keyframes c-out-up   { to   { opacity: 0; transform: translateY(-24px); } }
-    @keyframes c-out-down { to   { opacity: 0; transform: translateY(24px); } }
-    html.enter-up .masthead, html.enter-up .wrap     { animation: c-in-up   0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-    html.enter-down .masthead, html.enter-down .wrap { animation: c-in-down 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-    html.enter-up .wrap, html.enter-down .wrap { animation-delay: 0.05s; }
-    html.exiting-up .masthead, html.exiting-up .wrap     { animation: c-out-up   0.3s ease forwards; }
-    html.exiting-down .masthead, html.exiting-down .wrap { animation: c-out-down 0.3s ease forwards; }
+    /* Cross-page transition (works in every browser): the whole page slides
+       vertically — up toward the blog, down back to the home. */
+    @keyframes slide-in-up    { from { transform: translateY(100vh); } }
+    @keyframes slide-in-down  { from { transform: translateY(-100vh); } }
+    @keyframes slide-out-up   { to   { transform: translateY(-100vh); } }
+    @keyframes slide-out-down { to   { transform: translateY(100vh); } }
+    html.enter-up body     { animation: slide-in-up   0.5s cubic-bezier(0.76, 0, 0.24, 1) both; }
+    html.enter-down body   { animation: slide-in-down 0.5s cubic-bezier(0.76, 0, 0.24, 1) both; }
+    html.exiting-up body   { animation: slide-out-up   0.42s cubic-bezier(0.76, 0, 0.24, 1) forwards; }
+    html.exiting-down body { animation: slide-out-down 0.42s cubic-bezier(0.76, 0, 0.24, 1) forwards; }
     @media (prefers-reduced-motion: reduce) {
-      html.enter-up .masthead, html.enter-up .wrap, html.enter-down .masthead, html.enter-down .wrap,
-      html.exiting-up .masthead, html.exiting-up .wrap, html.exiting-down .masthead, html.exiting-down .wrap { animation: none; }
+      html.enter-up body, html.enter-down body, html.exiting-up body, html.exiting-down body { animation: none; }
     }
 
     /* ---- Blog index ---- */
@@ -162,7 +160,7 @@
       var dir = (url.pathname === "/" || url.pathname === "/index.html") ? "down" : "up";
       try { sessionStorage.setItem("navDir", dir); } catch (_) {}
       html.classList.add("exiting-" + dir);
-      window.setTimeout(function () { location.href = a.href; }, 290);
+      window.setTimeout(function () { location.href = a.href; }, 430);
     });
   })();
   </script>
