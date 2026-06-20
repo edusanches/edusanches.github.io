@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>try{var d=sessionStorage.getItem('navDir');if(d){document.documentElement.classList.add(d==='down'?'enter-down':'enter-up');sessionStorage.removeItem('navDir');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>eduardo sanches</title>
@@ -236,16 +235,6 @@
     @media (prefers-reduced-motion: reduce) {
       .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
       .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
-    }
-
-    /* Cross-page transition (works in every browser): the destination page
-       slides in vertically — up toward the blog, down back to the home. */
-    @keyframes slide-in-up    { from { transform: translateY(100vh); } }
-    @keyframes slide-in-down  { from { transform: translateY(-100vh); } }
-    html.enter-up body   { animation: slide-in-up   0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    html.enter-down body { animation: slide-in-down 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    @media (prefers-reduced-motion: reduce) {
-      html.enter-up body, html.enter-down body { animation: none; }
     }
   </style>
 </head>
@@ -580,11 +569,6 @@
       if (reduceMotion) renderStatic();
     });
 
-    // Re-anchor the origin after the page-slide transition finishes
-    window.addEventListener("animationend", function (e) {
-      if (e.target === document.body) updateOrigin();
-    });
-
     // Recover after the tab was backgrounded: the mobile browser can drop or
     // corrupt the canvas / leave stale dimensions, freezing a broken frame.
     // Rebuild at the current size and restart a clean loop on every return path.
@@ -642,27 +626,6 @@
     } else {
       raf = requestAnimationFrame(frame);
     }
-  })();
-  </script>
-
-  <script>
-  (function () {
-    var html = document.documentElement;
-    // tidy the entrance class once the slide-in has played
-    window.setTimeout(function () { html.classList.remove("enter-up", "enter-down"); }, 750);
-    window.addEventListener("pageshow", function () { html.classList.remove("enter-up", "enter-down"); });
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    // Remember the slide direction; the destination page plays the slide-in.
-    document.addEventListener("click", function (e) {
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest ? e.target.closest("a[href]") : null;
-      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
-      var url; try { url = new URL(a.href); } catch (_) { return; }
-      if (url.origin !== location.origin || url.pathname === location.pathname) return;
-      var dir = (url.pathname === "/" || url.pathname === "/index.html") ? "down" : "up";
-      try { sessionStorage.setItem("navDir", dir); } catch (_) {}
-    });
   })();
   </script>
 </body>

@@ -2,7 +2,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <script>try{var d=sessionStorage.getItem('navDir');if(d){document.documentElement.classList.add(d==='down'?'enter-down':'enter-up');sessionStorage.removeItem('navDir');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -57,17 +56,6 @@
     .masthead .current { color: var(--paper); font-weight: 700; }   /* bold on the current page */
 
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
-
-
-    /* Cross-page transition (works in every browser): the destination page
-       slides in vertically — up toward the blog, down back to the home. */
-    @keyframes slide-in-up    { from { transform: translateY(100vh); } }
-    @keyframes slide-in-down  { from { transform: translateY(-100vh); } }
-    html.enter-up body   { animation: slide-in-up   0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    html.enter-down body { animation: slide-in-down 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    @media (prefers-reduced-motion: reduce) {
-      html.enter-up body, html.enter-down body { animation: none; }
-    }
 
     /* ---- Blog index ---- */
     .post-item { padding: 26px 0; border-top: 1px solid var(--line); }
@@ -136,26 +124,5 @@
   <main class="wrap">
     {{ content }}
   </main>
-
-  <script>
-  (function () {
-    var html = document.documentElement;
-    // tidy the entrance class once the slide-in has played
-    window.setTimeout(function () { html.classList.remove("enter-up", "enter-down"); }, 750);
-    window.addEventListener("pageshow", function () { html.classList.remove("enter-up", "enter-down"); });
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    // Remember the slide direction; the destination page plays the slide-in.
-    document.addEventListener("click", function (e) {
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest ? e.target.closest("a[href]") : null;
-      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
-      var url; try { url = new URL(a.href); } catch (_) { return; }
-      if (url.origin !== location.origin || url.pathname === location.pathname) return;
-      var dir = (url.pathname === "/" || url.pathname === "/index.html") ? "down" : "up";
-      try { sessionStorage.setItem("navDir", dir); } catch (_) {}
-    });
-  })();
-  </script>
 </body>
 </html>
