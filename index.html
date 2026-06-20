@@ -277,7 +277,7 @@
     // ---- Adaptive tunables ----
     var DPR = 1;
     var isMobile = window.innerWidth < 720;
-    var spacing = isMobile ? 70 : 64;     // larger spacing -> fewer nodes (perf)
+    var spacing = isMobile ? 70 : 74;     // larger spacing -> fewer nodes (perf)
 
     // Perspective / camera (direct descendant of the original grid)
     var cameraAngle = Math.PI / 3.2;
@@ -364,7 +364,7 @@
     function resize() {
       DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       isMobile = window.innerWidth < 720;
-      spacing = isMobile ? 70 : 64;
+      spacing = isMobile ? 70 : 74;
       baseAmp = isMobile ? 16 : 22;
       cameraAngle = isMobile ? Math.PI / 4 : Math.PI / 3.2;  // smaller angle = more inclined on mobile
       cosA = Math.cos(cameraAngle);
