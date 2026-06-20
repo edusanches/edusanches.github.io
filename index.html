@@ -265,12 +265,12 @@
       transform: translateY(-14px);
       transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    /* arriving back from the blog: the curtain reveals downward */
+    /* arriving back from the blog: hold briefly (let content paint), then reveal downward */
     html.cover-down .page-cover {
       transform: translateY(0);
-      animation: coverDown 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+      animation: coverDown 0.45s cubic-bezier(0.76, 0, 0.24, 1) 0.12s both;
     }
-    @keyframes coverDown { to { transform: translateY(100%); } }
+    @keyframes coverDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
   </style>
 </head>
 <body>
