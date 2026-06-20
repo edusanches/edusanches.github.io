@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <script>if(!('onpagereveal' in window)){document.documentElement.classList.add('no-vt');}</script>
+  <script>try{var d=sessionStorage.getItem('navDir');if(d){document.documentElement.classList.add(d==='down'?'enter-down':'enter-up');sessionStorage.removeItem('navDir');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -59,33 +59,20 @@
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
 
 
-    /* Cross-document page transition (native View Transitions): the pages
-       slide vertically — up toward the blog, down back to the home. */
-    @view-transition { navigation: auto; }
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-      animation-duration: 0.5s;
-      animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
-    }
-    ::view-transition-old(root) { animation-name: vt-old-up; }
-    ::view-transition-new(root) { animation-name: vt-new-up; }
-    :root:active-view-transition-type(down)::view-transition-old(root) { animation-name: vt-old-down; }
-    :root:active-view-transition-type(down)::view-transition-new(root) { animation-name: vt-new-down; }
-    @keyframes vt-old-up   { from { transform: translateY(0); } to { transform: translateY(-100%); } }
-    @keyframes vt-new-up   { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    @keyframes vt-old-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
-    @keyframes vt-new-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+    /* Cross-page content transition (works in every browser): content slides
+       out on exit and in on arrival — up toward the blog, down back to home. */
+    @keyframes c-in-up    { from { opacity: 0; transform: translateY(24px); } }
+    @keyframes c-in-down  { from { opacity: 0; transform: translateY(-24px); } }
+    @keyframes c-out-up   { to   { opacity: 0; transform: translateY(-24px); } }
+    @keyframes c-out-down { to   { opacity: 0; transform: translateY(24px); } }
+    html.enter-up .masthead, html.enter-up .wrap     { animation: c-in-up   0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    html.enter-down .masthead, html.enter-down .wrap { animation: c-in-down 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    html.enter-up .wrap, html.enter-down .wrap { animation-delay: 0.05s; }
+    html.exiting-up .masthead, html.exiting-up .wrap     { animation: c-out-up   0.3s ease forwards; }
+    html.exiting-down .masthead, html.exiting-down .wrap { animation: c-out-down 0.3s ease forwards; }
     @media (prefers-reduced-motion: reduce) {
-      ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
-    }
-    /* Fallback for browsers without cross-document view transitions (e.g. Firefox) */
-    html.no-vt .masthead, html.no-vt .wrap { animation: fb-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-    html.no-vt .wrap { animation-delay: 0.05s; }
-    html.no-vt.exiting .masthead, html.no-vt.exiting .wrap { animation: fb-out 0.28s ease forwards; }
-    @keyframes fb-in  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-    @keyframes fb-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-14px); } }
-    @media (prefers-reduced-motion: reduce) {
-      html.no-vt .masthead, html.no-vt .wrap { animation: none; }
+      html.enter-up .masthead, html.enter-up .wrap, html.enter-down .masthead, html.enter-down .wrap,
+      html.exiting-up .masthead, html.exiting-up .wrap, html.exiting-down .masthead, html.exiting-down .wrap { animation: none; }
     }
 
     /* ---- Blog index ---- */
@@ -159,23 +146,11 @@
   <script>
   (function () {
     var html = document.documentElement;
-    // Native cross-document View Transitions: choose the slide direction
-    // (to the home = down, anywhere else = up).
-    if (!html.classList.contains("no-vt")) {
-      var dirFor = function (p) { return (p === "/" || p === "/index.html") ? "down" : "up"; };
-      window.addEventListener("pageswap", function (e) {
-        if (!e.viewTransition || !e.activation || !e.activation.entry) return;
-        try { e.viewTransition.types.add(dirFor(new URL(e.activation.entry.url).pathname)); } catch (err) {}
-      });
-      window.addEventListener("pagereveal", function (e) {
-        if (!e.viewTransition) return;
-        e.viewTransition.types.add(dirFor(location.pathname));
-      });
-      return;
-    }
-    // Fallback (e.g. Firefox): fade the content out on exit, in on load.
-    window.addEventListener("pageshow", function () { html.classList.remove("exiting"); });
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // tidy the entrance class once it has played
+    window.setTimeout(function () { html.classList.remove("enter-up", "enter-down"); }, 650);
+    // restored from bfcache: clear any exit state so content isn't left faded out
+    window.addEventListener("pageshow", function () { html.classList.remove("exiting-up", "exiting-down"); });
     if (reduce) return;
     document.addEventListener("click", function (e) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -184,8 +159,10 @@
       var url; try { url = new URL(a.href); } catch (_) { return; }
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
       e.preventDefault();
-      html.classList.add("exiting");
-      window.setTimeout(function () { location.href = a.href; }, 280);
+      var dir = (url.pathname === "/" || url.pathname === "/index.html") ? "down" : "up";
+      try { sessionStorage.setItem("navDir", dir); } catch (_) {}
+      html.classList.add("exiting-" + dir);
+      window.setTimeout(function () { location.href = a.href; }, 290);
     });
   })();
   </script>
