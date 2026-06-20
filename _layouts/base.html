@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
+  <script>try{if(sessionStorage.getItem('toBlog')){document.documentElement.className+=' cover-in';sessionStorage.removeItem('toBlog');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -87,6 +88,13 @@
     .page-cover::after { bottom: 0; }
     /* leaving to the home: curtain descends from the top to cover */
     body.leaving-home .page-cover { transform: translateY(0); }
+    /* arriving from the home: curtain reveals upward (continues the exit) */
+    html.cover-in .page-cover {
+      transform: translateY(0);
+      animation: coverReveal 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    }
+    html.cover-in .masthead, html.cover-in .wrap { animation: none; }  /* curtain does the reveal */
+    @keyframes coverReveal { to { transform: translateY(-100%); } }
 
     @media (prefers-reduced-motion: reduce) {
       .masthead, .wrap { animation: none; }
@@ -173,12 +181,17 @@
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
         e.preventDefault();
         var href = homeLink.getAttribute("href");
+        try { sessionStorage.setItem("toHome", "1"); } catch (err) {}
         if (reduce) { window.location.href = href; return; }
         document.body.classList.add("leaving-home");
         window.setTimeout(function () { window.location.href = href; }, 420);
       });
     }
+    if (cover) cover.addEventListener("animationend", function () {
+      document.documentElement.classList.remove("cover-in");
+    });
     window.addEventListener("pageshow", function () {
+      document.documentElement.classList.remove("cover-in");
       if (!document.body.classList.contains("leaving-home")) return;
       if (cover) cover.style.transition = "none";
       document.body.classList.remove("leaving-home");

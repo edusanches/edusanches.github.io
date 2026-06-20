@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>try{if(sessionStorage.getItem('toHome')){document.documentElement.className+=' cover-down';sessionStorage.removeItem('toHome');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>eduardo sanches</title>
@@ -235,7 +236,6 @@
     @media (prefers-reduced-motion: reduce) {
       .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
       .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
-      .stage { animation: none; }
     }
 
     /* Page transition: a dark curtain (hairline leading edge) covers on exit */
@@ -265,9 +265,12 @@
       transform: translateY(-14px);
       transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    /* arrival: content fades up (e.g. coming back from the blog) */
-    @keyframes stageIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-    .stage { animation: stageIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+    /* arriving back from the blog: the curtain reveals downward */
+    html.cover-down .page-cover {
+      transform: translateY(0);
+      animation: coverDown 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    }
+    @keyframes coverDown { to { transform: translateY(100%); } }
   </style>
 </head>
 <body>
@@ -673,14 +676,20 @@
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
         e.preventDefault();
         var href = link.getAttribute("href");
+        try { sessionStorage.setItem("toBlog", "1"); } catch (err) {}
         if (reduce) { window.location.href = href; return; }
         document.body.classList.add("leaving");
         window.setTimeout(function () { window.location.href = href; }, 420);
       });
     }
-    // Restored from bfcache (back/forward): snap the curtain hidden — no leftover
-    // cover (black) and no stray slide that would double up on the next click.
+    // Settle the entrance reveal so the cover returns to hidden afterwards.
+    if (cover) cover.addEventListener("animationend", function () {
+      document.documentElement.classList.remove("cover-down");
+    });
+    // Restored from bfcache (back/forward): snap any leftover exit cover hidden —
+    // no black home, no stray slide that would double up on the next click.
     window.addEventListener("pageshow", function () {
+      document.documentElement.classList.remove("cover-down");
       if (!document.body.classList.contains("leaving")) return;
       if (cover) cover.style.transition = "none";
       document.body.classList.remove("leaving");
