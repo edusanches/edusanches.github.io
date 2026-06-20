@@ -272,9 +272,10 @@
 
     var W = 0, H = 0, cols = 0, rows = 0, points = [];
 
-    // Smoothed mouse for fluid warp
-    var mouseX = -9999, mouseY = -9999;
-    var targetMX = -9999, targetMY = -9999;
+    // Smoothed mouse + eased warp intensity (eases in on contact, out on release)
+    var mouseX = 0, mouseY = 0;
+    var targetMX = 0, targetMY = 0;
+    var warpAmt = 0, warpTarget = 0;
 
     var buttons = document.querySelectorAll(".social-button");
     var touchTime = -1e9;
@@ -283,6 +284,7 @@
       if (Date.now() - touchTime < 700) return;
       targetMX = e.clientX;
       targetMY = e.clientY;
+      warpTarget = 1;
     }
     // Touch equivalent of :hover — fill the button under the finger
     function highlightButtonAt(x, y) {
@@ -297,24 +299,25 @@
       var t = e.touches && e.touches[0];
       if (!t) return;
       targetMX = t.clientX; targetMY = t.clientY;
-      mouseX = t.clientX; mouseY = t.clientY;   // snap on first contact (no fly-in)
+      warpTarget = 1;   // intensity eases in from 0, right at the finger (no fly-in, no pop)
       highlightButtonAt(t.clientX, t.clientY);
     }
     function onTouchMove(e) {
       touchTime = Date.now();
       var t = e.touches && e.touches[0];
       if (!t) return;
-      targetMX = t.clientX; targetMY = t.clientY;   // eased follow via the render lerp
+      targetMX = t.clientX; targetMY = t.clientY;
+      warpTarget = 1;
       highlightButtonAt(t.clientX, t.clientY);
     }
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
-    // On touch release, forget the last position immediately (no lingering warp)
+    window.addEventListener("mouseleave", function () { warpTarget = 0; });
+    // On touch release, ease the warp out in place (don't snap it away)
     function clearTouch() {
       touchTime = Date.now();
-      targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999;
+      warpTarget = 0;
       for (var b = 0; b < buttons.length; b++) buttons[b].classList.remove("is-active");
     }
     window.addEventListener("touchend", clearTouch, { passive: true });
@@ -434,9 +437,14 @@
     var start = 0;
 
     function renderScene(t) {
-      mouseX = lerp(mouseX, targetMX, 0.12);
-      mouseY = lerp(mouseY, targetMY, 0.12);
-      var mouseActive = targetMX > -9000;
+      warpAmt += (warpTarget - warpAmt) * 0.10;   // ease the warp intensity in/out
+      if (warpAmt < 0.01) {
+        mouseX = targetMX; mouseY = targetMY;       // idle: park position at the pointer so the next ease-in starts there
+      } else {
+        mouseX = lerp(mouseX, targetMX, 0.12);
+        mouseY = lerp(mouseY, targetMY, 0.12);
+      }
+      var mouseActive = warpAmt > 0.004;
 
       lastT = t;
       if (explosions.length) {
@@ -484,7 +492,7 @@
             var d = Math.sqrt(dx * dx + dy * dy);
             if (d < mouseRadius) {
               var inf = 1 - d / mouseRadius;
-              var e = inf * inf;
+              var e = inf * inf * warpAmt;
               if (e > p.lift) p.lift = e;
               p.y -= e * baseAmp * 2.4;
             }
