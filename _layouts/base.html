@@ -2,7 +2,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <script>try{if(sessionStorage.getItem('toBlog')){document.documentElement.className+=' cover-in';sessionStorage.removeItem('toBlog');}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -59,37 +58,24 @@
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
 
 
-    /* Page transition: a dark curtain (hairline edge) covers on exit to the home */
-    .page-cover {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: var(--ink);
-      transform: translateY(-100%);     /* hidden above by default */
-      transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
-      pointer-events: none;
-      will-change: transform;
+    /* Cross-document page transition (native View Transitions): the pages
+       slide vertically — up toward the blog, down back to the home. */
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 0.5s;
+      animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
     }
-    .page-cover::before, .page-cover::after {
-      content: "";
-      position: absolute;
-      left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(245, 246, 247, 0.65), transparent);
-    }
-    .page-cover::before { top: 0; }
-    .page-cover::after { bottom: 0; }
-    /* leaving to the home: curtain descends from the top to cover */
-    body.leaving-home .page-cover { transform: translateY(0); }
-    /* arriving from the home: hold briefly (let content paint), then reveal upward */
-    html.cover-in .page-cover {
-      transform: translateY(0);
-      animation: coverReveal 0.45s cubic-bezier(0.76, 0, 0.24, 1) 0.12s both;
-    }
-    @keyframes coverReveal { from { transform: translateY(0); } to { transform: translateY(-100%); } }
-
+    ::view-transition-old(root) { animation-name: vt-old-up; }
+    ::view-transition-new(root) { animation-name: vt-new-up; }
+    :root:active-view-transition-type(down)::view-transition-old(root) { animation-name: vt-old-down; }
+    :root:active-view-transition-type(down)::view-transition-new(root) { animation-name: vt-new-down; }
+    @keyframes vt-old-up   { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+    @keyframes vt-new-up   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes vt-old-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+    @keyframes vt-new-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) {
-      .page-cover { display: none; }
+      ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
     }
 
     /* ---- Blog index ---- */
@@ -144,8 +130,6 @@
   </style>
 </head>
 <body>
-  <div class="page-cover" aria-hidden="true"></div>
-
   <header class="masthead" aria-label="Caminho">
     <a href="/">eduardo sanches</a>
     <span class="sep">/</span>
@@ -163,32 +147,19 @@
   </main>
 
   <script>
+  // Pick the slide direction for the cross-document view transition:
+  // navigating to the home slides down, anywhere else slides up.
   (function () {
-    var cover = document.querySelector(".page-cover");
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var homeLink = document.querySelector('.masthead a[href="/"]');
-    if (homeLink) {
-      homeLink.addEventListener("click", function (e) {
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-        e.preventDefault();
-        var href = homeLink.getAttribute("href");
-        try { sessionStorage.setItem("toHome", "1"); } catch (err) {}
-        if (reduce) { window.location.href = href; return; }
-        document.body.classList.add("leaving-home");
-        window.setTimeout(function () { window.location.href = href; }, 420);
-      });
+    function dirFor(pathname) {
+      return (pathname === "/" || pathname === "/index.html") ? "down" : "up";
     }
-    if (cover) cover.addEventListener("animationend", function () {
-      document.documentElement.classList.remove("cover-in");
+    window.addEventListener("pageswap", function (e) {
+      if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+      try { e.viewTransition.types.add(dirFor(new URL(e.activation.entry.url).pathname)); } catch (err) {}
     });
-    window.addEventListener("pageshow", function () {
-      document.documentElement.classList.remove("cover-in");
-      if (!document.body.classList.contains("leaving-home")) return;
-      if (cover) cover.style.transition = "none";
-      document.body.classList.remove("leaving-home");
-      if (cover) requestAnimationFrame(function () {
-        requestAnimationFrame(function () { cover.style.transition = ""; });
-      });
+    window.addEventListener("pagereveal", function (e) {
+      if (!e.viewTransition) return;
+      e.viewTransition.types.add(dirFor(location.pathname));
     });
   })();
   </script>
