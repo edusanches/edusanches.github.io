@@ -44,17 +44,29 @@
       padding: 30px 22px 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
       font-family: 'IBM Plex Mono', ui-monospace, monospace;
       font-size: 13px;
       letter-spacing: 0.02em;
     }
     .masthead a { text-decoration: none; color: var(--grey); transition: color 0.2s ease; }
     .masthead a:hover { color: var(--paper); }
-    .masthead .home { color: var(--paper); font-weight: 500; }
     .masthead .sep { color: var(--grey); }
+    .masthead .current { color: var(--paper); font-weight: 700; }   /* bold on the current page */
 
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
+
+    /* Entrance — completes the transition coming from the home page */
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .masthead, .wrap { animation: pageEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .wrap { animation-delay: 0.06s; }
+    @media (prefers-reduced-motion: reduce) {
+      .masthead, .wrap { animation: none; }
+    }
 
     /* ---- Blog index ---- */
     .post-item { padding: 26px 0; border-top: 1px solid var(--line); }
@@ -108,10 +120,16 @@
   </style>
 </head>
 <body>
-  <header class="masthead">
-    <a class="home" href="/">eduardo sanches</a>
+  <header class="masthead" aria-label="Caminho">
+    <a href="/">eduardo sanches</a>
     <span class="sep">/</span>
-    <a class="bloglink" href="/blog/">blog</a>
+    {% if page.layout == 'post' %}
+    <a href="/blog/">blog</a>
+    <span class="sep">/</span>
+    <span class="current" aria-current="page">{{ page.title }}</span>
+    {% else %}
+    <span class="current" aria-current="page">blog</span>
+    {% endif %}
   </header>
 
   <main class="wrap">

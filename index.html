@@ -236,6 +236,23 @@
       .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
       .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
     }
+
+    /* Page transition: cover fades in and content lifts out on the way to the blog */
+    .page-cover {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: var(--ink);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.32s ease;
+    }
+    body.leaving .page-cover { opacity: 1; }
+    body.leaving .stage {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -257,6 +274,8 @@
       <a class="social-button" href="/blog/">Blog</a>
     </nav>
   </main>
+
+  <div class="page-cover" aria-hidden="true"></div>
 
   <script>
   (function () {
@@ -626,6 +645,22 @@
     } else {
       raf = requestAnimationFrame(frame);
     }
+  })();
+  </script>
+
+  <script>
+  (function () {
+    var link = document.querySelector('.social-button[href="/blog/"]');
+    if (!link) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    link.addEventListener("click", function (e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+      e.preventDefault();
+      var href = link.getAttribute("href");
+      if (reduce) { window.location.href = href; return; }
+      document.body.classList.add("leaving");
+      window.setTimeout(function () { window.location.href = href; }, 320);
+    });
   })();
   </script>
 </body>
