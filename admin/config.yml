@@ -1,0 +1,36 @@
+backend:
+  name: github
+  repo: edusanches/edusanches.github.io
+  branch: main
+  # ↓ Troque pela URL do seu Cloudflare Worker de login (passo 2 das instruções).
+  base_url: https://TROQUE-ME.workers.dev
+
+site_url: https://eduardosanches.com
+display_url: https://eduardosanches.com
+
+# Imagens enviadas pelo painel vão para /assets e são referenciadas como /assets/...
+media_folder: assets
+public_folder: /assets
+
+collections:
+  - name: posts
+    label: Posts
+    label_singular: Post
+    folder: _posts
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{title}}"
+    sort: date:desc
+    fields:
+      - { name: layout, label: Layout, widget: hidden, default: post }
+      - { name: title, label: "Título", widget: string }
+      - {
+          name: date,
+          label: "Data",
+          widget: datetime,
+          format: "YYYY-MM-DD",
+          date_format: "DD/MM/YYYY",
+          time_format: false,
+          picker_utc: false,
+        }
+      - { name: body, label: "Conteúdo", widget: markdown }
