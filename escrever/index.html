@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Escrever · blog</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <meta name="color-scheme" content="dark" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink:   #0a0a0b;
+      --panel: #121214;
+      --line:  rgba(245, 246, 247, 0.12);
+      --paper: #f5f6f7;
+      --soft:  #c7c7cc;
+      --grey:  #9a9a9f;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    a { color: inherit; }
+
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 13px;
+      color: var(--grey);
+    }
+    .topbar a { text-decoration: none; color: var(--grey); }
+    .topbar a:hover { color: var(--paper); }
+    .topbar .here { color: var(--paper); }
+
+    .editor {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 0;
+    }
+    .pane { min-height: 0; display: flex; flex-direction: column; }
+    .pane.form { border-right: 1px solid var(--line); }
+
+    .form-inner { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0; flex: 1; }
+
+    #title {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--paper);
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+      outline: none;
+    }
+    #title::placeholder { color: #4a4a52; }
+
+    .meta {
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--grey);
+    }
+    .meta code { color: var(--soft); }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+    .toolbar button {
+      background: var(--panel);
+      color: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .toolbar button:hover { background: #1b1b1f; color: var(--paper); border-color: rgba(245,246,247,0.28); }
+    .toolbar button b { font-weight: 800; }
+    .toolbar button i { font-style: italic; }
+
+    #body {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 160px;
+      resize: none;
+      background: var(--panel);
+      color: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      outline: none;
+    }
+    #body::placeholder { color: #4a4a52; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .actions button {
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      transition: opacity 0.15s, background 0.15s;
+    }
+    #publish { background: var(--paper); color: #0a0a0b; border-color: var(--paper); }
+    #publish:hover { opacity: 0.88; }
+    #copy { background: transparent; color: var(--soft); }
+    #copy:hover { color: var(--paper); border-color: rgba(245,246,247,0.28); }
+
+    .hint { font-size: 12px; color: var(--grey); margin: 0; line-height: 1.5; }
+
+    /* Preview — mirrors the blog reading style */
+    .pane.preview { overflow: auto; background: radial-gradient(120% 80% at 50% -10%, #161618 0%, #0a0a0b 60%); }
+    .preview-inner { max-width: 680px; margin: 0 auto; padding: 28px 24px 80px; }
+    .preview-label {
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--grey); margin-bottom: 18px;
+    }
+    .content h1.post-title {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(26px, 4vw, 38px); line-height: 1.12; letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+    .content .post-date { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: var(--grey); margin-bottom: 26px; }
+    .content { font-size: 17px; line-height: 1.7; color: var(--paper); }
+    .content > * + * { margin-top: 1.2em; }
+    .content h2 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 23px; letter-spacing: -0.01em; margin-top: 1.8em; }
+    .content h3 { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 19px; margin-top: 1.5em; }
+    .content a { color: var(--paper); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(245,246,247,0.4); }
+    .content img { max-width: 100%; height: auto; border-radius: 10px; display: block; }
+    .content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 10px; display: block; }
+    .content blockquote { margin: 1.4em 0; padding: 4px 0 4px 20px; border-left: 2px solid var(--line); color: var(--soft); font-style: italic; }
+    .content code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.88em; background: rgba(245,246,247,0.08); padding: 2px 6px; border-radius: 5px; }
+    .content pre { background: rgba(245,246,247,0.05); border: 1px solid var(--line); border-radius: 10px; padding: 16px; overflow: auto; }
+    .content pre code { background: none; padding: 0; }
+    .content ul, .content ol { padding-left: 1.3em; }
+    .content li + li { margin-top: 0.4em; }
+    .content hr { border: none; border-top: 1px solid var(--line); margin: 2.4em 0; }
+    .content .empty { color: var(--grey); }
+
+    @media (max-width: 820px) {
+      body { height: auto; min-height: 100vh; }
+      .editor { grid-template-columns: 1fr; }
+      .pane.form { border-right: none; border-bottom: 1px solid var(--line); }
+      #body { min-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/">eduardo sanches</a>
+    <span>/</span>
+    <a href="/blog/">blog</a>
+    <span>/</span>
+    <span class="here">escrever</span>
+  </header>
+
+  <main class="editor">
+    <section class="pane form">
+      <div class="form-inner">
+        <input id="title" type="text" placeholder="Título do post" autocomplete="off" />
+        <div class="meta">arquivo: <code id="filename">_posts/…</code></div>
+
+        <div class="toolbar" id="toolbar">
+          <button type="button" data-cmd="bold" title="Negrito"><b>B</b></button>
+          <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
+          <button type="button" data-cmd="link" title="Link">Link</button>
+          <button type="button" data-cmd="image" title="Imagem">Imagem</button>
+          <button type="button" data-cmd="h2" title="Título">H2</button>
+          <button type="button" data-cmd="h3" title="Subtítulo">H3</button>
+          <button type="button" data-cmd="ul" title="Lista">Lista</button>
+          <button type="button" data-cmd="quote" title="Citação">&ldquo; &rdquo;</button>
+          <button type="button" data-cmd="code" title="Código">Código</button>
+          <button type="button" data-cmd="youtube" title="Vídeo do YouTube">YouTube</button>
+        </div>
+
+        <textarea id="body" placeholder="Escreva aqui… use a barra acima ou markdown direto."></textarea>
+
+        <div class="actions">
+          <button id="publish" type="button">Publicar no GitHub →</button>
+          <button id="copy" type="button">Copiar markdown</button>
+        </div>
+        <p class="hint">
+          &ldquo;Publicar&rdquo; abre o editor do GitHub já preenchido — é só revisar e clicar em <b>Commit changes</b>.
+          Para posts muito longos, use <b>Copiar markdown</b> e cole no GitHub.
+        </p>
+      </div>
+    </section>
+
+    <section class="pane preview">
+      <div class="preview-inner">
+        <p class="preview-label">preview</p>
+        <article class="content" id="preview"></article>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script>
+  (function () {
+    var REPO = "edusanches/edusanches.github.io";
+    var BRANCH = "main";
+
+    var titleEl = document.getElementById("title");
+    var bodyEl = document.getElementById("body");
+    var fileEl = document.getElementById("filename");
+    var previewEl = document.getElementById("preview");
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function today() {
+      var d = new Date();
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    }
+    var DATE = today();
+
+    function slugify(s) {
+      return (s || "")
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function filename() {
+      var slug = slugify(titleEl.value) || "post";
+      return "_posts/" + DATE + "-" + slug + ".md";
+    }
+
+    function frontMatter() {
+      var t = (titleEl.value || "Sem título").replace(/"/g, '\\"');
+      return "---\nlayout: post\ntitle: \"" + t + "\"\ndate: " + DATE + "\n---\n\n";
+    }
+
+    function fullDoc() { return frontMatter() + bodyEl.value + "\n"; }
+
+    // Render the YouTube include as an iframe just for the preview
+    function previewMarkdown(md) {
+      return md.replace(/\{%\s*include\s+youtube\.html\s+id=["']([\w-]+)["']\s*%\}/g,
+        '<iframe src="https://www.youtube-nocookie.com/embed/$1" allowfullscreen></iframe>');
+    }
+
+    function render() {
+      fileEl.textContent = filename();
+      var t = titleEl.value || "Título do post";
+      var head = '<h1 class="post-title">' + t.replace(/</g, "&lt;") + '</h1>' +
+                 '<div class="post-date">' + DATE.split("-").reverse().join(".") + '</div>';
+      var md = bodyEl.value.trim();
+      var html = md ? marked.parse(previewMarkdown(md)) : '<p class="empty">A prévia do texto aparece aqui.</p>';
+      previewEl.innerHTML = head + html;
+    }
+
+    // ---- Toolbar ----
+    function surround(before, after) {
+      var s = bodyEl.selectionStart, e = bodyEl.selectionEnd;
+      var sel = bodyEl.value.slice(s, e) || "texto";
+      bodyEl.setRangeText(before + sel + after, s, e, "end");
+      bodyEl.focus();
+      render();
+    }
+    function linePrefix(prefix) {
+      var s = bodyEl.selectionStart;
+      var val = bodyEl.value;
+      var lineStart = val.lastIndexOf("\n", s - 1) + 1;
+      bodyEl.setRangeText(prefix, lineStart, lineStart, "end");
+      bodyEl.focus();
+      render();
+    }
+    function insertBlock(text) {
+      var s = bodyEl.selectionStart;
+      var val = bodyEl.value;
+      var pre = (s > 0 && val[s - 1] !== "\n") ? "\n" : "";
+      bodyEl.setRangeText(pre + text, s, bodyEl.selectionEnd, "end");
+      bodyEl.focus();
+      render();
+    }
+
+    var commands = {
+      bold:   function () { surround("**", "**"); },
+      italic: function () { surround("*", "*"); },
+      code:   function () { surround("`", "`"); },
+      h2:     function () { linePrefix("## "); },
+      h3:     function () { linePrefix("### "); },
+      ul:     function () { linePrefix("- "); },
+      quote:  function () { linePrefix("> "); },
+      link:   function () {
+        var url = prompt("URL do link:", "https://");
+        if (url === null) return;
+        var s = bodyEl.selectionStart, e = bodyEl.selectionEnd;
+        var sel = bodyEl.value.slice(s, e) || "texto do link";
+        bodyEl.setRangeText("[" + sel + "](" + url + ")", s, e, "end");
+        bodyEl.focus(); render();
+      },
+      image:  function () {
+        var url = prompt("Caminho/URL da imagem:", "/assets/");
+        if (url === null) return;
+        insertBlock("![descrição](" + url + ")\n");
+      },
+      youtube: function () {
+        var id = prompt("ID do vídeo do YouTube (depois de v= na URL):", "");
+        if (id === null) return;
+        insertBlock('{% include youtube.html id="' + id.trim() + '" %}\n');
+      }
+    };
+
+    document.getElementById("toolbar").addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-cmd]");
+      if (btn && commands[btn.dataset.cmd]) commands[btn.dataset.cmd]();
+    });
+
+    // Keyboard shortcuts: Ctrl/Cmd+B / +I
+    bodyEl.addEventListener("keydown", function (e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      var k = e.key.toLowerCase();
+      if (k === "b") { e.preventDefault(); commands.bold(); }
+      else if (k === "i") { e.preventDefault(); commands.italic(); }
+    });
+
+    titleEl.addEventListener("input", render);
+    bodyEl.addEventListener("input", render);
+
+    // ---- Publish / copy ----
+    document.getElementById("publish").addEventListener("click", function () {
+      if (!titleEl.value.trim()) { titleEl.focus(); return; }
+      var url = "https://github.com/" + REPO + "/new/" + BRANCH +
+        "?filename=" + encodeURIComponent(filename()) +
+        "&value=" + encodeURIComponent(fullDoc());
+      window.open(url, "_blank", "noopener");
+    });
+
+    document.getElementById("copy").addEventListener("click", function () {
+      var btn = this;
+      navigator.clipboard.writeText(fullDoc()).then(function () {
+        var old = btn.textContent; btn.textContent = "Copiado ✓";
+        setTimeout(function () { btn.textContent = old; }, 1500);
+      });
+    });
+
+    render();
+  })();
+  </script>
+</body>
+</html>
