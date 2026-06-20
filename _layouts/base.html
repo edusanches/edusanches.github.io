@@ -2,9 +2,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <script>
-    try { if (sessionStorage.getItem('toBlog')) { document.documentElement.className += ' cover-in'; sessionStorage.removeItem('toBlog'); } } catch (e) {}
-  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -68,13 +65,14 @@
     .masthead, .wrap { animation: pageEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
     .wrap { animation-delay: 0.06s; }
 
-    /* Arriving from the home: a dark curtain reveals upward (continues the exit) */
+    /* Page transition: a dark curtain (hairline edge) covers on exit to the home */
     .page-cover {
       position: fixed;
       inset: 0;
       z-index: 50;
       background: var(--ink);
-      transform: translateY(-100%);     /* hidden by default (normal loads) */
+      transform: translateY(-100%);     /* hidden above by default */
+      transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
       pointer-events: none;
       will-change: transform;
     }
@@ -87,12 +85,8 @@
     }
     .page-cover::before { top: 0; }
     .page-cover::after { bottom: 0; }
-    html.cover-in .page-cover {
-      transform: translateY(0);
-      animation: coverReveal 0.58s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-    }
-    html.cover-in .masthead, html.cover-in .wrap { animation: none; }  /* curtain does the reveal */
-    @keyframes coverReveal { to { transform: translateY(-100%); } }
+    /* leaving to the home: curtain descends from the top to cover */
+    body.leaving-home .page-cover { transform: translateY(0); }
 
     @media (prefers-reduced-motion: reduce) {
       .masthead, .wrap { animation: none; }
@@ -168,5 +162,31 @@
   <main class="wrap">
     {{ content }}
   </main>
+
+  <script>
+  (function () {
+    var cover = document.querySelector(".page-cover");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var homeLink = document.querySelector('.masthead a[href="/"]');
+    if (homeLink) {
+      homeLink.addEventListener("click", function (e) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+        e.preventDefault();
+        var href = homeLink.getAttribute("href");
+        if (reduce) { window.location.href = href; return; }
+        document.body.classList.add("leaving-home");
+        window.setTimeout(function () { window.location.href = href; }, 420);
+      });
+    }
+    window.addEventListener("pageshow", function () {
+      if (!document.body.classList.contains("leaving-home")) return;
+      if (cover) cover.style.transition = "none";
+      document.body.classList.remove("leaving-home");
+      if (cover) requestAnimationFrame(function () {
+        requestAnimationFrame(function () { cover.style.transition = ""; });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

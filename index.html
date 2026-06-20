@@ -235,16 +235,17 @@
     @media (prefers-reduced-motion: reduce) {
       .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
       .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
+      .stage { animation: none; }
     }
 
-    /* Page transition: a dark curtain wipes up (hairline leading edge) toward the blog */
+    /* Page transition: a dark curtain (hairline leading edge) covers on exit */
     .page-cover {
       position: fixed;
       inset: 0;
       z-index: 50;
       background: var(--ink);
       transform: translateY(100%);
-      transition: transform 0.46s cubic-bezier(0.76, 0, 0.24, 1);
+      transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
       pointer-events: none;
       will-change: transform;
     }
@@ -257,12 +258,16 @@
     }
     .page-cover::before { top: 0; }
     .page-cover::after { bottom: 0; }
+    /* leaving to the blog: curtain rises up to cover */
     body.leaving .page-cover { transform: translateY(0); }
     body.leaving .stage {
       opacity: 0;
       transform: translateY(-14px);
       transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    /* arrival: content fades up (e.g. coming back from the blog) */
+    @keyframes stageIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .stage { animation: stageIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
   </style>
 </head>
 <body>
@@ -660,6 +665,7 @@
 
   <script>
   (function () {
+    var cover = document.querySelector(".page-cover");
     var link = document.querySelector('.social-button[href="/blog/"]');
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (link) {
@@ -667,16 +673,20 @@
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
         e.preventDefault();
         var href = link.getAttribute("href");
-        try { sessionStorage.setItem("toBlog", "1"); } catch (err) {}
         if (reduce) { window.location.href = href; return; }
         document.body.classList.add("leaving");
-        window.setTimeout(function () { window.location.href = href; }, 430);
+        window.setTimeout(function () { window.location.href = href; }, 420);
       });
     }
-    // Returning via the back button restores this page from bfcache with the
-    // .leaving class still applied — clear it so the home isn't left black.
+    // Restored from bfcache (back/forward): snap the curtain hidden — no leftover
+    // cover (black) and no stray slide that would double up on the next click.
     window.addEventListener("pageshow", function () {
+      if (!document.body.classList.contains("leaving")) return;
+      if (cover) cover.style.transition = "none";
       document.body.classList.remove("leaving");
+      if (cover) requestAnimationFrame(function () {
+        requestAnimationFrame(function () { cover.style.transition = ""; });
+      });
     });
   })();
   </script>
