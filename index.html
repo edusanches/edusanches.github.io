@@ -264,13 +264,21 @@
     var mouseX = -9999, mouseY = -9999;
     var targetMX = -9999, targetMY = -9999;
 
-    function onMove(e) {
-      var t = e.touches && e.touches[0];
-      targetMX = t ? t.clientX : e.clientX;
-      targetMY = t ? t.clientY : e.clientY;
+    function onMouseMove(e) {
+      targetMX = e.clientX;
+      targetMY = e.clientY;
     }
-    window.addEventListener("mousemove", onMove, { passive: true });
-    window.addEventListener("touchmove", onMove, { passive: true });
+    function onTouch(e) {
+      var t = e.touches && e.touches[0];
+      if (!t) return;
+      targetMX = t.clientX;
+      targetMY = t.clientY;
+      mouseX = t.clientX;   // snap on touch — no easing lag, follows the finger
+      mouseY = t.clientY;
+    }
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("touchstart", onTouch, { passive: true });
+    window.addEventListener("touchmove", onTouch, { passive: true });
     window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
     // On touch release, forget the last position immediately (no lingering warp)
     function clearTouch() { targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999; }
