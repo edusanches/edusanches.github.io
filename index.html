@@ -21,9 +21,18 @@
 
   <style>
     :root {
-      --ink:   #0a0a0b;
-      --paper: #f5f6f7;
-      --grey:  #9a9a9f;
+      /* Type */
+      --font-display: 'Sora', sans-serif;
+      --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+      /* Colour */
+      --ink:       #0a0a0b;        /* page background       */
+      --panel:     #121214;        /* raised surface        */
+      --paper:     #f5f6f7;        /* primary text          */
+      --soft:      #c7c7cc;        /* secondary text        */
+      --grey:      #9a9a9f;        /* tertiary / meta text  */
+      --paper-rgb: 245, 246, 247;  /* for translucent fills */
+      --line:      rgba(var(--paper-rgb), 0.12);  /* hairlines */
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -34,7 +43,7 @@
       margin: 0;
       min-height: 100vh;
       min-height: 100svh;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-family: var(--font-body);
       color: var(--paper);
       text-align: center;
       background: radial-gradient(125% 95% at 50% -10%, #18181a 0%, var(--ink) 56%, #050506 100%);
@@ -105,7 +114,7 @@
       inset: -14px;
       border-radius: 50%;
       z-index: -1;
-      background: radial-gradient(closest-side, rgba(245, 246, 247, 0.3), transparent 77%);
+      background: radial-gradient(closest-side, rgba(var(--paper-rgb), 0.3), transparent 77%);
       opacity: 0.55;
       pointer-events: none;
       transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
@@ -145,7 +154,7 @@
     }
 
     h1 {
-      font-family: 'Sora', sans-serif;
+      font-family: var(--font-display);
       font-weight: 800;
       font-size: clamp(30px, 7.5vw, 40px);
       line-height: 1.05;
@@ -157,7 +166,7 @@
 
     .tagline {
       font-size: 13.5px;
-      color: #b0b0b6;
+      color: var(--soft);
       margin: 0 0 34px;
       text-shadow: 0 1px 16px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.85);
     }
@@ -181,11 +190,11 @@
       text-align: center;
       text-decoration: none;
       color: var(--paper);
-      font-family: 'Sora', sans-serif;
+      font-family: var(--font-display);
       font-weight: 600;
       font-size: 15px;
-      background: rgba(245, 246, 247, 0.10);
-      border: 1px solid rgba(245, 246, 247, 0.18);
+      background: rgba(var(--paper-rgb), 0.10);
+      border: 1px solid rgba(var(--paper-rgb), 0.18);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px) saturate(120%);
       -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -205,7 +214,7 @@
     }
     .social-button:focus-visible,
     .social-button.is-active {
-      color: #0a0a0b;
+      color: var(--ink);
       border-color: var(--paper);
     }
     .social-button:focus-visible::before,
@@ -215,7 +224,7 @@
     /* Real hover only on pointer devices — avoids sticky hover on touch */
     @media (hover: hover) {
       .social-button:hover {
-        color: #0a0a0b;
+        color: var(--ink);
         border-color: var(--paper);
       }
       .social-button:hover::before {
@@ -223,7 +232,7 @@
       }
     }
     .social-button:focus-visible {
-      outline: 2px solid rgba(245, 246, 247, 0.8);
+      outline: 2px solid rgba(var(--paper-rgb), 0.8);
       outline-offset: 3px;
     }
 
