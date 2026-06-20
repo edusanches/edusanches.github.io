@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
+  <script>if(!('onpagereveal' in window)){document.documentElement.classList.add('no-vt');}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
@@ -77,6 +78,15 @@
     @media (prefers-reduced-motion: reduce) {
       ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
     }
+    /* Fallback for browsers without cross-document view transitions (e.g. Firefox) */
+    html.no-vt .masthead, html.no-vt .wrap { animation: fb-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    html.no-vt .wrap { animation-delay: 0.05s; }
+    html.no-vt.exiting .masthead, html.no-vt.exiting .wrap { animation: fb-out 0.28s ease forwards; }
+    @keyframes fb-in  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes fb-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-14px); } }
+    @media (prefers-reduced-motion: reduce) {
+      html.no-vt .masthead, html.no-vt .wrap { animation: none; }
+    }
 
     /* ---- Blog index ---- */
     .post-item { padding: 26px 0; border-top: 1px solid var(--line); }
@@ -147,19 +157,35 @@
   </main>
 
   <script>
-  // Pick the slide direction for the cross-document view transition:
-  // navigating to the home slides down, anywhere else slides up.
   (function () {
-    function dirFor(pathname) {
-      return (pathname === "/" || pathname === "/index.html") ? "down" : "up";
+    var html = document.documentElement;
+    // Native cross-document View Transitions: choose the slide direction
+    // (to the home = down, anywhere else = up).
+    if (!html.classList.contains("no-vt")) {
+      var dirFor = function (p) { return (p === "/" || p === "/index.html") ? "down" : "up"; };
+      window.addEventListener("pageswap", function (e) {
+        if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+        try { e.viewTransition.types.add(dirFor(new URL(e.activation.entry.url).pathname)); } catch (err) {}
+      });
+      window.addEventListener("pagereveal", function (e) {
+        if (!e.viewTransition) return;
+        e.viewTransition.types.add(dirFor(location.pathname));
+      });
+      return;
     }
-    window.addEventListener("pageswap", function (e) {
-      if (!e.viewTransition || !e.activation || !e.activation.entry) return;
-      try { e.viewTransition.types.add(dirFor(new URL(e.activation.entry.url).pathname)); } catch (err) {}
-    });
-    window.addEventListener("pagereveal", function (e) {
-      if (!e.viewTransition) return;
-      e.viewTransition.types.add(dirFor(location.pathname));
+    // Fallback (e.g. Firefox): fade the content out on exit, in on load.
+    window.addEventListener("pageshow", function () { html.classList.remove("exiting"); });
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      var url; try { url = new URL(a.href); } catch (_) { return; }
+      if (url.origin !== location.origin || url.pathname === location.pathname) return;
+      e.preventDefault();
+      html.classList.add("exiting");
+      window.setTimeout(function () { location.href = a.href; }, 280);
     });
   })();
   </script>
