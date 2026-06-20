@@ -5,7 +5,7 @@ layout: base
 
 <article class="post">
   <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d.%m.%Y" }}</time>
-  <h1>{{ page.title }}</h1>
+  <h1 id="post-top">{{ page.title }}</h1>
   <div class="content">
     {{ content }}
   </div>
@@ -17,30 +17,35 @@ layout: base
 (function () {
   var content = document.querySelector(".post .content");
   var toc = document.getElementById("toc");
-  if (!content || !toc) return;
+  var titleEl = document.querySelector(".post h1");
+  if (!content || !toc || !titleEl) return;
   var heads = content.querySelectorAll("h2, h3");
   if (heads.length < 2) { toc.remove(); return; }   // not worth a TOC
 
   var ul = document.createElement("ul");
   var byId = {};
-  Array.prototype.forEach.call(heads, function (h) {
-    if (!h.id) {
-      h.id = h.textContent.toLowerCase().trim()
+  var observed = [];
+
+  function addItem(el, cls) {
+    if (!el.id) {
+      el.id = el.textContent.toLowerCase().trim()
         .replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
     }
     var a = document.createElement("a");
-    a.href = "#" + h.id;
-    a.textContent = h.textContent;
-    if (h.tagName === "H3") a.className = "sub";
+    a.href = "#" + el.id;
+    a.textContent = el.textContent;
+    if (cls) a.className = cls;
     var li = document.createElement("li");
     li.appendChild(a);
     ul.appendChild(li);
-    byId[h.id] = a;
+    byId[el.id] = a;
+    observed.push(el);
+  }
+
+  addItem(titleEl, "top");   // post title is the first item
+  Array.prototype.forEach.call(heads, function (h) {
+    addItem(h, h.tagName === "H3" ? "sub" : null);
   });
-  var title = document.createElement("div");
-  title.className = "toc-title";
-  title.textContent = "Neste post";
-  toc.appendChild(title);
   toc.appendChild(ul);
 
   // Highlight the section currently in view
@@ -54,6 +59,6 @@ layout: base
       }
     });
   }, { rootMargin: "0px 0px -75% 0px" });
-  Array.prototype.forEach.call(heads, function (h) { obs.observe(h); });
+  observed.forEach(function (el) { obs.observe(el); });
 })();
 </script>
