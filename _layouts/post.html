@@ -1,6 +1,8 @@
 ---
 layout: base
 ---
+<aside class="toc" id="toc" aria-label="Conteúdo do post"></aside>
+
 <article class="post">
   <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d.%m.%Y" }}</time>
   <h1>{{ page.title }}</h1>
@@ -10,3 +12,48 @@ layout: base
 </article>
 
 <a class="back" href="/blog/">← voltar ao blog</a>
+
+<script>
+(function () {
+  var content = document.querySelector(".post .content");
+  var toc = document.getElementById("toc");
+  if (!content || !toc) return;
+  var heads = content.querySelectorAll("h2, h3");
+  if (heads.length < 2) { toc.remove(); return; }   // not worth a TOC
+
+  var ul = document.createElement("ul");
+  var byId = {};
+  Array.prototype.forEach.call(heads, function (h) {
+    if (!h.id) {
+      h.id = h.textContent.toLowerCase().trim()
+        .replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+    }
+    var a = document.createElement("a");
+    a.href = "#" + h.id;
+    a.textContent = h.textContent;
+    if (h.tagName === "H3") a.className = "sub";
+    var li = document.createElement("li");
+    li.appendChild(a);
+    ul.appendChild(li);
+    byId[h.id] = a;
+  });
+  var title = document.createElement("div");
+  title.className = "toc-title";
+  title.textContent = "Neste post";
+  toc.appendChild(title);
+  toc.appendChild(ul);
+
+  // Highlight the section currently in view
+  var active = null;
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        if (active) active.classList.remove("active");
+        active = byId[e.target.id];
+        if (active) active.classList.add("active");
+      }
+    });
+  }, { rootMargin: "0px 0px -75% 0px" });
+  Array.prototype.forEach.call(heads, function (h) { obs.observe(h); });
+})();
+</script>
