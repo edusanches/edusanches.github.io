@@ -335,7 +335,9 @@
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("mouseleave", function () { warpTarget = 0; });
+    // Fade the warp out when the pointer leaves the viewport or the window loses focus
+    document.documentElement.addEventListener("mouseleave", function () { warpTarget = 0; });
+    window.addEventListener("blur", function () { warpTarget = 0; });
     // On touch release, ease the warp out in place (don't snap it away)
     function clearTouch() {
       touchTime = Date.now();
@@ -463,8 +465,8 @@
       if (warpAmt < 0.01) {
         mouseX = targetMX; mouseY = targetMY;       // idle: park position at the pointer so the next ease-in starts there
       } else {
-        mouseX = lerp(mouseX, targetMX, 0.12);
-        mouseY = lerp(mouseY, targetMY, 0.12);
+        mouseX = lerp(mouseX, targetMX, 0.3);       // tight follow (small smoothing, no laggy trail)
+        mouseY = lerp(mouseY, targetMY, 0.3);
       }
       var mouseActive = warpAmt > 0.004;
 
