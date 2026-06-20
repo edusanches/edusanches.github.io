@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>{% if page.title %}{{ page.title }} · {% endif %}eduardo sanches</title>
+  <meta name="description" content="{{ page.excerpt | default: 'Blog de Eduardo Sanches.' | strip_html | normalize_whitespace | truncate: 160 }}" />
+
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="color-scheme" content="dark" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink:   #0a0a0b;
+      --paper: #f5f6f7;
+      --soft:  #c7c7cc;
+      --grey:  #9a9a9f;
+      --line:  rgba(245, 246, 247, 0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--ink) radial-gradient(120% 80% at 50% -10%, #161618 0%, #0a0a0b 58%) no-repeat;
+      color: var(--paper);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid rgba(245, 246, 247, 0.7); outline-offset: 3px; border-radius: 2px; }
+
+    .masthead {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 30px 22px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .masthead a { text-decoration: none; color: var(--grey); transition: color 0.2s ease; }
+    .masthead a:hover { color: var(--paper); }
+    .masthead .home { color: var(--paper); font-weight: 500; }
+    .masthead .sep { color: var(--grey); }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
+
+    /* ---- Blog index ---- */
+    .post-item { padding: 26px 0; border-top: 1px solid var(--line); }
+    .post-item:first-child { border-top: none; padding-top: 6px; }
+    .post-item time { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: var(--grey); }
+    .post-item h2 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.01em; margin: 8px 0; }
+    .post-item h2 a { text-decoration: none; }
+    .post-item h2 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .post-item .excerpt { color: var(--soft); margin: 0; }
+    .empty { color: var(--grey); }
+
+    /* ---- Single post ---- */
+    .post time { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; color: var(--grey); }
+    .post h1 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: clamp(28px, 6.5vw, 40px);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      margin: 10px 0 30px;
+    }
+    .content { font-size: 17px; }
+    .content > * + * { margin-top: 1.2em; }
+    .content h2 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 23px; letter-spacing: -0.01em; margin-top: 1.8em; }
+    .content h3 { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 19px; margin-top: 1.5em; }
+    .content a { color: var(--paper); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(245, 246, 247, 0.4); }
+    .content a:hover { text-decoration-color: var(--paper); }
+    .content img { max-width: 100%; height: auto; border-radius: 10px; display: block; }
+    .content blockquote { margin: 1.4em 0; padding: 4px 0 4px 20px; border-left: 2px solid var(--line); color: var(--soft); font-style: italic; }
+    .content code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.88em; background: rgba(245, 246, 247, 0.08); padding: 2px 6px; border-radius: 5px; }
+    .content pre { background: rgba(245, 246, 247, 0.05); border: 1px solid var(--line); border-radius: 10px; padding: 16px; overflow: auto; }
+    .content pre code { background: none; padding: 0; }
+    .content ul, .content ol { padding-left: 1.3em; }
+    .content li + li { margin-top: 0.4em; }
+    .content hr { border: none; border-top: 1px solid var(--line); margin: 2.4em 0; }
+
+    .back {
+      display: inline-block;
+      margin-top: 52px;
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 13px;
+      color: var(--grey);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .back:hover { color: var(--paper); }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <a class="home" href="/">eduardo sanches</a>
+    <span class="sep">/</span>
+    <a class="bloglink" href="/blog/">blog</a>
+  </header>
+
+  <main class="wrap">
+    {{ content }}
+  </main>
+</body>
+</html>

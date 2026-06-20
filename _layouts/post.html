@@ -1,0 +1,12 @@
+---
+layout: base
+---
+<article class="post">
+  <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d.%m.%Y" }}</time>
+  <h1>{{ page.title }}</h1>
+  <div class="content">
+    {{ content }}
+  </div>
+</article>
+
+<a class="back" href="/blog/">← voltar ao blog</a>

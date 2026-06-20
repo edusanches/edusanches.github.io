@@ -1,1 +1,3 @@
 include: [".well-known"]
+title: eduardo sanches
+permalink: /blog/:title/

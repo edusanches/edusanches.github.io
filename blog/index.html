@@ -1,0 +1,15 @@
+---
+layout: base
+title: Blog
+---
+{% if site.posts.size == 0 %}
+<p class="empty">Em breve.</p>
+{% else %}
+{% for post in site.posts %}
+<article class="post-item">
+  <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%d.%m.%Y" }}</time>
+  <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+  <p class="excerpt">{{ post.excerpt | strip_html | normalize_whitespace | truncate: 180 }}</p>
+</article>
+{% endfor %}
+{% endif %}
