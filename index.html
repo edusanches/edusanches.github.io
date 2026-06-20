@@ -28,7 +28,7 @@
 
     *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
-    html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+    html { -webkit-text-size-adjust: 100%; overflow: hidden; overscroll-behavior: none; }
 
     body {
       margin: 0;
@@ -40,7 +40,8 @@
       background: radial-gradient(125% 95% at 50% -10%, #18181a 0%, var(--ink) 56%, #050506 100%);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
-      overflow-x: hidden;
+      overflow: hidden;
+      overscroll-behavior: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -54,6 +55,7 @@
       height: 100%;
       z-index: -1;
       display: block;
+      touch-action: none;
     }
 
     /* Soft vignette to settle the mesh behind the content (flat, no glow) */
@@ -270,6 +272,10 @@
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("touchmove", onMove, { passive: true });
     window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
+    // On touch release, forget the last position immediately (no lingering warp)
+    function clearTouch() { targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999; }
+    window.addEventListener("touchend", clearTouch, { passive: true });
+    window.addEventListener("touchcancel", clearTouch, { passive: true });
 
     // Anchor the grid origin to the photo centre (fallback: viewport centre)
     function updateOrigin() {
