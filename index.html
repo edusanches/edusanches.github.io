@@ -545,14 +545,28 @@
       if (reduceMotion) renderStatic();
     });
 
+    // Recover after the tab was backgrounded: the mobile browser can drop or
+    // corrupt the canvas / leave stale dimensions, freezing a broken frame.
+    // Rebuild at the current size and restart a clean loop on every return path.
+    function ensureRunning() {
+      if (document.hidden) return;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      resize();
+      if (reduceMotion) { renderStatic(); return; }
+      start = 0;
+      raf = requestAnimationFrame(frame);
+    }
+
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) {
         if (raf) { cancelAnimationFrame(raf); raf = null; }
-      } else if (!reduceMotion && !raf) {
-        start = 0;
-        raf = requestAnimationFrame(frame);
+      } else {
+        ensureRunning();
       }
     });
+    window.addEventListener("pageshow", ensureRunning);
+    window.addEventListener("focus", ensureRunning);
+    canvas.addEventListener("contextrestored", ensureRunning);
 
     // React to motion-preference changes live
     if (window.matchMedia) {
