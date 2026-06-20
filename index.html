@@ -264,11 +264,15 @@
     var mouseX = -9999, mouseY = -9999;
     var targetMX = -9999, targetMY = -9999;
 
+    var touchTime = -1e9;
     function onMouseMove(e) {
+      // Ignore synthetic mouse events fired right after a touch (mobile ghost events)
+      if (Date.now() - touchTime < 700) return;
       targetMX = e.clientX;
       targetMY = e.clientY;
     }
     function onTouch(e) {
+      touchTime = Date.now();
       var t = e.touches && e.touches[0];
       if (!t) return;
       targetMX = t.clientX;
@@ -281,7 +285,7 @@
     window.addEventListener("touchmove", onTouch, { passive: true });
     window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
     // On touch release, forget the last position immediately (no lingering warp)
-    function clearTouch() { targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999; }
+    function clearTouch() { touchTime = Date.now(); targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999; }
     window.addEventListener("touchend", clearTouch, { passive: true });
     window.addEventListener("touchcancel", clearTouch, { passive: true });
 
