@@ -1,328 +1,537 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Basic Meta Tags -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>eduardo sanches</title>
   <meta name="description" content="A collection of important links for Eduardo Sanches." />
-  <meta name="keywords" content="Eduardo Sanches, Links, GitHub, X, Instagram, YouTube" />
+  <meta name="keywords" content="Eduardo Sanches, Links, X, Instagram, YouTube, Substack" />
 
   <!-- Favicon -->
   <link rel="icon" href="favicon.png" type="image/png" />
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Gloock:wght@700&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="color-scheme" content="dark" />
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-xOolHFLEhXw6tJPmAgKpJNfziUWTP0Ai8txM8JZ+2HmKoIE9OxKYq9E7RhxCl9TNP/ikZ1CAnYlTx8Fa4l8ESQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Google Fonts: Sora (display) · Inter (body) · IBM Plex Mono (utility) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-  <!-- CSS Styles -->
   <style>
+    :root {
+      --ink:   #0a0a0b;
+      --paper: #f5f6f7;
+      --grey:  #9a9a9f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+
     body {
-      font-family: 'Roboto', Arial, sans-serif;
-      background-color: #000000;
-      color: #ffffff;
-      text-align: center;
       margin: 0;
-      padding: 50px;
-      overflow: hidden;
-      position: relative;
-    }
-    canvas#backgroundCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-    }
-    h1 {
-      font-family: 'Gloock', serif;
-      font-size: 48px;
-      font-weight: 700;
-      margin-bottom: 30px;
-    }
-    .profile-image {
-      width: 150px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 50%;
-      margin-bottom: 20px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-      transition: box-shadow 0.3s ease;
-      z-index: 1;
-    }
-    .profile-image:hover {
-      box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
-    }
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    .social-button {
+      min-height: 100vh;
+      min-height: 100svh;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: var(--paper);
+      text-align: center;
+      background: radial-gradient(125% 95% at 50% -10%, #18181a 0%, var(--ink) 56%, #050506 100%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 15px 25px;
+      padding: 44px 20px;
+    }
+
+    canvas#mesh {
+      position: fixed;
+      inset: 0;
       width: 100%;
-      max-width: 250px;
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
+      height: 100%;
+      z-index: -1;
+      display: block;
+    }
+
+    /* Soft vignette to settle the mesh behind the content (flat, no glow) */
+    .atmosphere {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: radial-gradient(70% 56% at 50% 46%, transparent 46%, rgba(5, 5, 6, 0.55) 100%);
+    }
+
+    /* ===== Content: no card, flat elements floating over the mesh ===== */
+    .stage {
+      position: relative;
+      z-index: 1;
+      width: min(460px, 92vw);
+    }
+    /* Soft dark halo behind the photo / name / tagline to mute the grid there */
+    .stage::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: 50%;
+      top: -16px;
+      width: 100%;
+      height: 330px;
+      transform: translateX(-50%);
+      background: radial-gradient(50% 50% at 50% 50%, rgba(8, 8, 9, 0.92) 0%, rgba(8, 8, 9, 0.55) 42%, rgba(8, 8, 9, 0) 72%);
+      filter: blur(4px);
+      pointer-events: none;
+    }
+
+    .avatar {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto 22px;
+      cursor: pointer;
+    }
+    /* Soft halo behind the photo instead of a hard outline */
+    .avatar::before {
+      content: "";
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      z-index: -1;
+      background: radial-gradient(closest-side, rgba(245, 246, 247, 0.16), transparent 78%);
+      pointer-events: none;
+    }
+    .profile-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.4s ease;
+    }
+    .avatar:hover .profile-image {
+      transform: scale(1.04);
+      filter: saturate(1.06) brightness(1.05);
+    }
+
+    h1 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: clamp(30px, 7.5vw, 40px);
+      line-height: 1.05;
+      letter-spacing: -0.022em;
+      color: var(--paper);
+      margin: 0 0 10px;
+      text-shadow: 0 1px 30px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
+    }
+
+    .tagline {
+      font-size: 13.5px;
+      color: #b0b0b6;
+      margin: 0 0 34px;
+      text-shadow: 0 1px 16px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.85);
+    }
+    .tagline b { color: var(--paper); font-weight: 600; }
+
+    /* Flat buttons — no glass, no blur, no shadow, no depth */
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .social-button {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      padding: 14px 18px;
+      border-radius: 14px;
+      text-align: center;
       text-decoration: none;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 25px;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-      font-size: 18px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--paper);
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      background: rgba(245, 246, 247, 0.10);
+      border: 1px solid rgba(245, 246, 247, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.35s ease, border-color 0.35s ease;
     }
-    .social-button i {
-      margin-right: 10px;
-      font-size: 20px;
-      transition: transform 0.3s ease;
+    /* White fill that wipes in from the left on hover; text turns dark */
+    .social-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--paper);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .social-button:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+    .social-button:hover,
+    .social-button:focus-visible {
+      color: #0a0a0b;
+      border-color: var(--paper);
     }
-    .social-button:hover i {
-      transform: scale(1.2);
+    .social-button:hover::before,
+    .social-button:focus-visible::before {
+      transform: scaleX(1);
     }
-    @media (max-width: 600px) {
-      body { padding: 20px; }
-      .social-button { max-width: 200px; padding: 12px 20px; font-size: 16px; }
-      h1 { font-size: 36px; }
-      .profile-image { width: 120px; height: 120px; }
+    .social-button:focus-visible {
+      outline: 2px solid rgba(245, 246, 247, 0.8);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 380px) {
+      .avatar { width: 104px; height: 104px; }
+      .social-button { font-size: 14px; padding: 13px 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .social-button, .social-button::before, .profile-image { transition: none; }
+      .avatar:hover .profile-image { transform: none; }
     }
   </style>
 </head>
 <body>
-  <!-- Canvas for Background Animation -->
-  <canvas id="backgroundCanvas"></canvas>
+  <canvas id="mesh" aria-hidden="true"></canvas>
+  <div class="atmosphere" aria-hidden="true"></div>
 
-  <!-- Profile Image -->
-  <img src="profile.jpg" alt="Profile picture of Eduardo Sanches" class="profile-image" />
-  <!-- Heading -->
-  <h1>eduardo sanches</h1>
+  <main class="stage">
+    <span class="avatar">
+      <img src="profile.jpg" alt="Profile picture of Eduardo Sanches" class="profile-image" width="120" height="120" decoding="async" />
+    </span>
 
-  <!-- Links Section -->
-  <div class="links">
-    <a href="https://x.com/eduardosanches" class="social-button" aria-label="X">
-      <i class="fab fa-x-twitter"></i> X
-    </a>
-    <a href="https://instagram.com/_eduardosanches" class="social-button" aria-label="Instagram">
-      <i class="fab fa-instagram"></i> Instagram
-    </a>
-    <a href="https://www.youtube.com/@eduardo_sanches" class="social-button" aria-label="YouTube">
-      <i class="fab fa-youtube"></i> YouTube
-    </a>
-    <a href="https://substack.com/@eduardosanches" class="social-button" aria-label="Substack">
-      <i class="fa-solid fa-notebook"></i> Substack
-    </a>
-  </div>
+    <h1>eduardo sanches</h1>
+    <p class="tagline">creative dev &middot; <b>building things for the web</b></p>
 
-  <!-- JavaScript for Background Animation with Glow Effect -->
+    <nav class="links" aria-label="Social links">
+      <a class="social-button" href="https://x.com/eduardosanches" target="_blank" rel="noopener noreferrer">X</a>
+      <a class="social-button" href="https://instagram.com/_eduardosanches" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a class="social-button" href="https://www.youtube.com/@eduardo_sanches" target="_blank" rel="noopener noreferrer">YouTube</a>
+      <a class="social-button" href="https://substack.com/@eduardosanches" target="_blank" rel="noopener noreferrer">Substack</a>
+    </nav>
+  </main>
+
   <script>
-    const canvas = document.getElementById("backgroundCanvas");
-    const ctx = canvas.getContext("2d");
+  (function () {
+    "use strict";
 
-    let points = [];
-    let mouseX = 0;
-    let mouseY = 0;
+    var canvas = document.getElementById("mesh");
+    var ctx = canvas.getContext("2d", { alpha: true });
+    var reduceMotion = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Select all social media buttons
-    const buttons = document.querySelectorAll('.social-button');
+    var avatarEl = document.querySelector(".avatar");
+    // Projection origin — anchored to the centre of the photo, not the viewport
+    var originX = 0, originY = 0;
 
-    // Grid & wave configuration
-    const squareSize = 50;
-    const baseAmplitude = 10; // Reduced to prevent excessive deformation
-    const waveLength = 300;
-    const mouseInfluenceRadius = 200;
-    let gridWidth, gridHeight;
+    // ---- Flat line colour (monochrome white, no gradient / no glow) ----
+    var LINE = [240, 242, 247];
 
-    // Perspective / camera config
-    let cameraAngle = Math.PI / 4;
-    let cameraHeight = 100;
-    let perspective = 1600; // Increased to reduce distortion
+    // ---- Adaptive tunables ----
+    var DPR = 1;
+    var isMobile = window.innerWidth < 720;
+    var spacing = isMobile ? 70 : 64;     // larger spacing -> fewer nodes (perf)
 
-    // Listen for mouse/touch
-    function updateMousePosition(e) {
-      if (e.touches && e.touches.length > 0) {
-        mouseX = e.touches[0].clientX;
-        mouseY = e.touches[0].clientY;
-      } else {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
+    // Perspective / camera (direct descendant of the original grid)
+    var cameraAngle = Math.PI / 3.2;
+    var cameraHeight = 120;
+    var perspective = 1500;
+    var cosA = Math.cos(cameraAngle);
+    var sinA = Math.sin(cameraAngle);
+
+    // Wave config — multi-octave undulation
+    var waveLength = 320;
+    var baseAmp = isMobile ? 16 : 22;
+    var mouseRadius = 230;
+    var maxDepth = 1150;
+
+    var W = 0, H = 0, cols = 0, rows = 0, points = [];
+
+    // Smoothed mouse for fluid warp
+    var mouseX = -9999, mouseY = -9999;
+    var targetMX = -9999, targetMY = -9999;
+
+    function onMove(e) {
+      var t = e.touches && e.touches[0];
+      targetMX = t ? t.clientX : e.clientX;
+      targetMY = t ? t.clientY : e.clientY;
+    }
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
+
+    // Anchor the grid origin to the photo centre (fallback: viewport centre)
+    function updateOrigin() {
+      if (avatarEl) {
+        var r = avatarEl.getBoundingClientRect();
+        if (r.width) {
+          originX = r.left + r.width / 2;
+          originY = r.top + r.height / 2;
+          return;
+        }
       }
+      originX = W / 2;
+      originY = H / 2;
     }
-    document.addEventListener("mousemove", updateMousePosition);
-    document.addEventListener("touchmove", updateMousePosition, { passive: false });
 
-    // Resize & init
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      createGrid();
+    function resize() {
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      isMobile = window.innerWidth < 720;
+      spacing = isMobile ? 70 : 64;
+      baseAmp = isMobile ? 16 : 22;
+      cameraAngle = isMobile ? Math.PI / 4 : Math.PI / 3.2;  // smaller angle = more inclined on mobile
+      cosA = Math.cos(cameraAngle);
+      sinA = Math.sin(cameraAngle);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      updateOrigin();
+      buildGrid();
+      if (reduceMotion) renderStatic();
     }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
 
-    // Create a large enough grid with depth limitation
-    function createGrid() {
+    function buildGrid() {
+      var margin = 14;
+      cols = Math.ceil(W / spacing) + margin;
+      rows = Math.ceil(H / spacing) + margin + 8;   // extra rows for depth
       points = [];
-      const margin = 20;
-      const baseX = Math.ceil(canvas.width / squareSize);
-      const baseY = Math.ceil(canvas.height / squareSize);
-      gridWidth = baseX + margin;
-      gridHeight = baseY + margin;
-
-      for (let x = 0; x <= gridWidth; x++) {
-        points[x] = [];
-        for (let y = 0; y <= gridHeight; y++) {
-          const xPos = (x - gridWidth / 2) * squareSize;
-          const yPos = 0;
-          const zPos = (y - gridHeight / 2) * squareSize;
-          if (Math.abs(zPos) < 1000) { // Limit depth
-            points[x][y] = { x: xPos, y: yPos, z: zPos };
-          }
+      for (var i = 0; i <= cols; i++) {
+        points[i] = [];
+        for (var j = 0; j <= rows; j++) {
+          points[i][j] = {
+            x: (i - cols / 2) * spacing,
+            z: (j - rows / 2) * spacing,
+            y: 0, sx: 0, sy: 0, scale: 1, depth: 0, lift: 0
+          };
         }
       }
     }
 
-    // Perspective projection
-    function project3D(x, y, z) {
-      const cosA = Math.cos(cameraAngle);
-      const sinA = Math.sin(cameraAngle);
-
-      const yRot = y * cosA - z * sinA;
-      const zRot = y * sinA + z * cosA;
-
-      const scale = perspective / (perspective + zRot + cameraHeight);
-      return {
-        x: canvas.width / 2 + x * scale,
-        y: canvas.height / 2 + yRot * scale,
-        zRot: zRot // For depth-based rendering
-      };
+    // Perspective projection: scale = perspective / (perspective + depth)
+    function project(p) {
+      var yRot = p.y * cosA - p.z * sinA;
+      var zRot = p.y * sinA + p.z * cosA;
+      var scale = perspective / (perspective + zRot + cameraHeight);
+      p.sx = originX + p.x * scale;
+      p.sy = originY + yRot * scale;
+      p.scale = scale;
+      p.depth = zRot;
     }
 
-    // Function to draw a rounded rectangle path
-    function roundedRect(ctx, x, y, width, height, radius) {
+    // Multi-octave (layered sine) height field — organic motion
+    function heightAt(dist, x, z, t) {
+      var h = Math.sin(dist / waveLength - t) * baseAmp;          // original wave
+      h += Math.sin(x * 0.012 + t * 1.3) * baseAmp * 0.45;
+      h += Math.cos(z * 0.010 - t * 0.9) * baseAmp * 0.35;
+      h += Math.sin((x + z) * 0.006 + t * 0.6) * baseAmp * 0.25;
+      return h;
+    }
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function fog(depth) { return Math.max(0, 1 - Math.abs(depth) / maxDepth); }
+
+    // Flat wireframe edge — one tone, fog-faded, no additive glow
+    function drawEdge(a, b) {
+      var depth = (a.depth + b.depth) * 0.5;
+      if (depth > maxDepth) return;
+      var f = fog(depth);
+      if (f <= 0.01) return;
+      var lift = a.lift > b.lift ? a.lift : b.lift;
+      var alpha = f * (0.08 + lift * 0.5);
+      ctx.strokeStyle = "rgba(" + LINE[0] + "," + LINE[1] + "," + LINE[2] + "," + alpha + ")";
       ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
+      ctx.moveTo(a.sx, a.sy);
+      ctx.lineTo(b.sx, b.sy);
+      ctx.stroke();
     }
 
-    // Main animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Flat node — a small solid dot, no glowing core
+    function drawNode(p) {
+      if (p.depth > maxDepth) return;
+      var f = fog(p.depth);
+      if (f <= 0.02) return;
+      var r = 0.8 + p.scale * 1.1 + p.lift * 1.4;
+      var a = f * (0.14 + p.lift * 0.5);
+      ctx.fillStyle = "rgba(" + LINE[0] + "," + LINE[1] + "," + LINE[2] + "," + a + ")";
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-      // Draw glow effect inside buttons when mouse is near
-      buttons.forEach(button => {
-        const rect = button.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const dx = mouseX - centerX;
-        const dy = mouseY - centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 500; // Distance threshold for glow activation
+    // ---- Explosion shockwave (triggered by hovering the photo) ----
+    var EXP_DUR = 1.8;       // seconds the wave lives
+    var EXP_SPEED = 950;     // world units/sec the wavefront travels outward
+    var EXP_SIGMA = 190;     // ring thickness
+    var EXP_TWOSIG = 2 * EXP_SIGMA * EXP_SIGMA;
+    var EXP_AMP = 150;       // peak lift toward viewer at the wavefront
+    var explosions = [];
+    var lastT = 0;
 
-        if (dist < maxDist) {
-          const intensity = 1 - dist / maxDist;
-          ctx.save();
-          roundedRect(ctx, rect.left, rect.top, rect.width, rect.height, 25); // Match button's border-radius
-          ctx.clip();
-          ctx.globalAlpha = intensity;
-          const glowRadius = 100; // Size of the glow effect
-          const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
-          gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
-          gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-          ctx.fillStyle = gradient;
-          ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
-          ctx.restore();
+    var start = 0;
+
+    function renderScene(t) {
+      mouseX = lerp(mouseX, targetMX, 0.12);
+      mouseY = lerp(mouseY, targetMY, 0.12);
+      var mouseActive = targetMX > -9000;
+
+      lastT = t;
+      if (explosions.length) {
+        var alive = [];
+        for (var ei = 0; ei < explosions.length; ei++) {
+          if (t - explosions[ei].t0 <= EXP_DUR) alive.push(explosions[ei]);
         }
-      });
-
-      const time = Date.now() * 0.001;
-
-      // Update wave for each point
-      for (let x = 0; x <= gridWidth; x++) {
-        for (let y = 0; y <= gridHeight; y++) {
-          if (points[x][y]) {
-            const p = points[x][y];
-
-            const distCenter = Math.sqrt(p.x * p.x + p.z * p.z);
-            const waveValue = Math.sin(distCenter / waveLength - time) * baseAmplitude;
-
-            const screenPos = project3D(p.x, p.y, p.z);
-            const dx = screenPos.x - mouseX;
-            const dy = screenPos.y - mouseY;
-            const distMouse = Math.sqrt(dx * dx + dy * dy);
-            const influence = Math.max(0, mouseInfluenceRadius - distMouse) / mouseInfluenceRadius;
-            const mouseWave = waveValue * influence * 2;
-
-            p.y = waveValue + mouseWave;
-          }
-        }
+        explosions = alive;
       }
 
-      // Draw checkered lines with depth limitation and fog
+      ctx.clearRect(0, 0, W, H);
       ctx.lineWidth = 1;
-      for (let x = 0; x < gridWidth; x++) {
-        for (let y = 0; y < gridHeight; y++) {
-          if (points[x][y] && points[x + 1][y]) {
-            const p1 = points[x][y];
-            const p2 = points[x + 1][y];
-            const projP1 = project3D(p1.x, p1.y, p1.z);
-            const projP2 = project3D(p2.x, p2.y, p2.z);
-            const avgZRot = (projP1.zRot + projP2.zRot) / 2;
-            if (avgZRot < 1000) { // Limit depth
-              const opacity = Math.max(0, 1 - Math.abs(avgZRot) / 1000); // Fog effect
-              ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.1})`;
-              ctx.beginPath();
-              ctx.moveTo(projP1.x, projP1.y);
-              ctx.lineTo(projP2.x, projP2.y);
-              ctx.stroke();
+      // flat rendering: default source-over compositing (no additive "lighter")
+
+      var i, j, p;
+
+      // Heights
+      for (i = 0; i <= cols; i++) {
+        for (j = 0; j <= rows; j++) {
+          p = points[i][j];
+          var dist = Math.sqrt(p.x * p.x + p.z * p.z);
+          p.y = heightAt(dist, p.x, p.z, t);
+          p.lift = 0;
+          for (var ex = 0; ex < explosions.length; ex++) {
+            var age = t - explosions[ex].t0;
+            if (age < 0 || age > EXP_DUR) continue;
+            var dd = dist - age * EXP_SPEED;
+            var ring = Math.exp(-(dd * dd) / EXP_TWOSIG);
+            var env = 1 - age / EXP_DUR;
+            p.y -= ring * EXP_AMP * env;
+            if (ring * env > p.lift) p.lift = ring * env;
+          }
+        }
+      }
+      // Project (need screen pos to measure mouse distance)
+      for (i = 0; i <= cols; i++) {
+        for (j = 0; j <= rows; j++) project(points[i][j]);
+      }
+      // Mouse warp: lift surface toward viewer near the cursor
+      if (mouseActive) {
+        for (i = 0; i <= cols; i++) {
+          for (j = 0; j <= rows; j++) {
+            p = points[i][j];
+            var dx = p.sx - mouseX, dy = p.sy - mouseY;
+            var d = Math.sqrt(dx * dx + dy * dy);
+            if (d < mouseRadius) {
+              var inf = 1 - d / mouseRadius;
+              var e = inf * inf;
+              if (e > p.lift) p.lift = e;
+              p.y -= e * baseAmp * 2.4;
             }
           }
-          if (points[x][y] && points[x][y + 1]) {
-            const p1 = points[x][y];
-            const p3 = points[x][y + 1];
-            const projP1 = project3D(p1.x, p1.y, p1.z);
-            const projP3 = project3D(p3.x, p3.y, p3.z);
-            const avgZRot = (projP1.zRot + projP3.zRot) / 2;
-            if (avgZRot < 1000) { // Limit depth
-              const opacity = Math.max(0, 1 - Math.abs(avgZRot) / 1000); // Fog effect
-              ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.1})`;
-              ctx.beginPath();
-              ctx.moveTo(projP1.x, projP1.y);
-              ctx.lineTo(projP3.x, projP3.y);
-              ctx.stroke();
-            }
+        }
+        for (i = 0; i <= cols; i++) {
+          for (j = 0; j <= rows; j++) {
+            if (points[i][j].lift > 0) project(points[i][j]);
           }
+        }
+      }
+
+      // Wireframe edges (depth fog)
+      for (i = 0; i <= cols; i++) {
+        for (j = 0; j <= rows; j++) {
+          p = points[i][j];
+          if (i < cols) drawEdge(p, points[i + 1][j]);
+          if (j < rows) drawEdge(p, points[i][j + 1]);
+        }
+      }
+
+      // Flat nodes — a dot on every grid corner
+      var step = 1;
+      for (i = 0; i <= cols; i += step) {
+        for (j = 0; j <= rows; j += step) {
+          drawNode(points[i][j]);
         }
       }
     }
 
-    animate();
+    var raf = null;
+    function frame(now) {
+      if (!start) start = now;
+      var t = (now - start) * 0.001;
+      renderScene(t);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function renderStatic() {
+      // calm single frame, fixed phase, no mouse warp
+      start = 0;
+      renderScene(1.2);
+    }
+
+    window.addEventListener("resize", resize, { passive: true });
+
+    // Recompute the photo-anchored origin once fonts/layout settle
+    window.addEventListener("load", function () {
+      updateOrigin();
+      if (reduceMotion) renderStatic();
+    });
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        if (raf) { cancelAnimationFrame(raf); raf = null; }
+      } else if (!reduceMotion && !raf) {
+        start = 0;
+        raf = requestAnimationFrame(frame);
+      }
+    });
+
+    // React to motion-preference changes live
+    if (window.matchMedia) {
+      var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      var onMq = function () {
+        reduceMotion = mq.matches;
+        if (reduceMotion) {
+          if (raf) { cancelAnimationFrame(raf); raf = null; }
+          renderStatic();
+        } else if (!raf) {
+          start = 0;
+          raf = requestAnimationFrame(frame);
+        }
+      };
+      if (mq.addEventListener) mq.addEventListener("change", onMq);
+      else if (mq.addListener) mq.addListener(onMq);
+    }
+
+    // Trigger a shockwave when the photo is hovered (or tapped on touch)
+    if (avatarEl) {
+      var burst = function () {
+        if (reduceMotion) return;
+        if (explosions.length < 5) explosions.push({ t0: lastT });
+      };
+      avatarEl.addEventListener("mouseenter", burst);
+      avatarEl.addEventListener("touchstart", burst, { passive: true });
+    }
+
+    // Boot
+    resize();
+    if (reduceMotion) {
+      renderStatic();
+    } else {
+      raf = requestAnimationFrame(frame);
+    }
+  })();
   </script>
 </body>
 </html>
