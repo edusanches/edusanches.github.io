@@ -56,17 +56,29 @@ layout: base
   });
   toc.appendChild(ul);
 
-  // Highlight the section currently in view
+  // Highlight the section currently in view: the last heading scrolled past
   var active = null;
-  var obs = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) {
-        if (active) active.classList.remove("active");
-        active = byId[e.target.id];
-        if (active) active.classList.add("active");
-      }
-    });
-  }, { rootMargin: "0px 0px -75% 0px" });
-  observed.forEach(function (el) { obs.observe(el); });
+  function setActive(a) {
+    if (a === active) return;
+    if (active) active.classList.remove("active");
+    active = a;
+    if (active) active.classList.add("active");
+  }
+  function spy() {
+    var idx = 0;
+    for (var i = 0; i < observed.length; i++) {
+      if (observed[i].getBoundingClientRect().top <= 100) idx = i;
+      else break;
+    }
+    setActive(byId[observed[idx].id]);
+  }
+  var ticking = false;
+  window.addEventListener("scroll", function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { spy(); ticking = false; });
+  }, { passive: true });
+  window.addEventListener("resize", spy, { passive: true });
+  spy();
 })();
 </script>
