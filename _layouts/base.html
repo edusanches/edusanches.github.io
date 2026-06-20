@@ -25,7 +25,7 @@
       --line:  rgba(245, 246, 247, 0.12);
     }
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; background: #0a0a0b; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -59,18 +59,14 @@
     .wrap { max-width: 680px; margin: 0 auto; padding: 40px 22px 120px; }
 
 
-    /* Cross-page transition (works in every browser): the whole page slides
-       vertically — up toward the blog, down back to the home. */
+    /* Cross-page transition (works in every browser): the destination page
+       slides in vertically — up toward the blog, down back to the home. */
     @keyframes slide-in-up    { from { transform: translateY(100vh); } }
     @keyframes slide-in-down  { from { transform: translateY(-100vh); } }
-    @keyframes slide-out-up   { to   { transform: translateY(-100vh); } }
-    @keyframes slide-out-down { to   { transform: translateY(100vh); } }
-    html.enter-up body     { animation: slide-in-up   0.5s cubic-bezier(0.76, 0, 0.24, 1) both; }
-    html.enter-down body   { animation: slide-in-down 0.5s cubic-bezier(0.76, 0, 0.24, 1) both; }
-    html.exiting-up body   { animation: slide-out-up   0.42s cubic-bezier(0.76, 0, 0.24, 1) forwards; }
-    html.exiting-down body { animation: slide-out-down 0.42s cubic-bezier(0.76, 0, 0.24, 1) forwards; }
+    html.enter-up body   { animation: slide-in-up   0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    html.enter-down body { animation: slide-in-down 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
     @media (prefers-reduced-motion: reduce) {
-      html.enter-up body, html.enter-down body, html.exiting-up body, html.exiting-down body { animation: none; }
+      html.enter-up body, html.enter-down body { animation: none; }
     }
 
     /* ---- Blog index ---- */
@@ -144,23 +140,20 @@
   <script>
   (function () {
     var html = document.documentElement;
+    // tidy the entrance class once the slide-in has played
+    window.setTimeout(function () { html.classList.remove("enter-up", "enter-down"); }, 750);
+    window.addEventListener("pageshow", function () { html.classList.remove("enter-up", "enter-down"); });
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // tidy the entrance class once it has played
-    window.setTimeout(function () { html.classList.remove("enter-up", "enter-down"); }, 650);
-    // restored from bfcache: clear any exit state so content isn't left faded out
-    window.addEventListener("pageshow", function () { html.classList.remove("exiting-up", "exiting-down"); });
     if (reduce) return;
+    // Remember the slide direction; the destination page plays the slide-in.
     document.addEventListener("click", function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       var a = e.target.closest ? e.target.closest("a[href]") : null;
       if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
       var url; try { url = new URL(a.href); } catch (_) { return; }
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
-      e.preventDefault();
       var dir = (url.pathname === "/" || url.pathname === "/index.html") ? "down" : "up";
       try { sessionStorage.setItem("navDir", dir); } catch (_) {}
-      html.classList.add("exiting-" + dir);
-      window.setTimeout(function () { location.href = a.href; }, 430);
     });
   })();
   </script>
