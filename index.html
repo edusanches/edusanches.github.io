@@ -180,12 +180,14 @@
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .social-button:hover,
-    .social-button:focus-visible {
+    .social-button:focus-visible,
+    .social-button.is-active {
       color: #0a0a0b;
       border-color: var(--paper);
     }
     .social-button:hover::before,
-    .social-button:focus-visible::before {
+    .social-button:focus-visible::before,
+    .social-button.is-active::before {
       transform: scaleX(1);
     }
     .social-button:focus-visible {
@@ -264,6 +266,7 @@
     var mouseX = -9999, mouseY = -9999;
     var targetMX = -9999, targetMY = -9999;
 
+    var buttons = document.querySelectorAll(".social-button");
     var touchTime = -1e9;
     function onMouseMove(e) {
       // Ignore synthetic mouse events fired right after a touch (mobile ghost events)
@@ -279,13 +282,23 @@
       targetMY = t.clientY;
       mouseX = t.clientX;   // snap on touch — no easing lag, follows the finger
       mouseY = t.clientY;
+      // Touch equivalent of :hover — fill the button under the finger
+      var el = document.elementFromPoint(t.clientX, t.clientY);
+      var btn = el && el.closest ? el.closest(".social-button") : null;
+      for (var b = 0; b < buttons.length; b++) {
+        buttons[b].classList.toggle("is-active", buttons[b] === btn);
+      }
     }
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("touchstart", onTouch, { passive: true });
     window.addEventListener("touchmove", onTouch, { passive: true });
     window.addEventListener("mouseleave", function () { targetMX = -9999; targetMY = -9999; });
     // On touch release, forget the last position immediately (no lingering warp)
-    function clearTouch() { touchTime = Date.now(); targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999; }
+    function clearTouch() {
+      touchTime = Date.now();
+      targetMX = -9999; targetMY = -9999; mouseX = -9999; mouseY = -9999;
+      for (var b = 0; b < buttons.length; b++) buttons[b].classList.remove("is-active");
+    }
     window.addEventListener("touchend", clearTouch, { passive: true });
     window.addEventListener("touchcancel", clearTouch, { passive: true });
 
