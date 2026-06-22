@@ -33,6 +33,11 @@
       --grey:      #9a9a9f;        /* tertiary / meta text  */
       --paper-rgb: 245, 246, 247;  /* for translucent fills */
       --line:      rgba(var(--paper-rgb), 0.12);  /* hairlines */
+      /* Shape & layout */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --reading:   680px;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -186,7 +191,7 @@
       overflow: hidden;
       isolation: isolate;
       padding: 14px 18px;
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
       text-align: center;
       text-decoration: none;
       color: var(--paper);

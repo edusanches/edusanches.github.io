@@ -33,6 +33,17 @@ Para transparências do branco use `rgba(var(--paper-rgb), <alpha>)` — não
 literais `rgba(245, 246, 247, …)`. Branco/preto puros (`#fff`, `#000`) ficam
 reservados a brilhos e sombras.
 
+## Forma e layout
+
+| Token         | Valor   | Uso                                              |
+| ------------- | ------- | ------------------------------------------------ |
+| `--radius-sm` | `6px`   | code, chips, botões pequenos                     |
+| `--radius-md` | `10px`  | imagens, vídeos, blocos de código, inputs        |
+| `--radius-lg` | `14px`  | botões grandes (home)                            |
+| `--reading`   | `680px` | largura da coluna de leitura (blog/editor)        |
+
+Círculos usam `50%`; o raio do `outline` de foco fica em `2px` literal.
+
 ## Convenções
 
 - **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa uma variação própria por causa da malha animada.
