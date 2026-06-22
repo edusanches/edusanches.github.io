@@ -31,6 +31,14 @@
       --radius-md: 10px;
       --radius-lg: 14px;
       --reading:   680px;
+      /* Spacing (4-based scale) */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -51,7 +59,7 @@
       flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-3);
       padding: 12px 18px;
       border-bottom: 1px solid var(--line);
       font-family: var(--font-mono);
@@ -71,7 +79,7 @@
     .pane { min-height: 0; display: flex; flex-direction: column; }
     .pane.form { border-right: 1px solid var(--line); }
 
-    .form-inner { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0; flex: 1; }
+    .form-inner { padding: 20px; display: flex; flex-direction: column; gap: var(--space-3); min-height: 0; flex: 1; }
 
     #title {
       width: 100%;
@@ -93,7 +101,7 @@
     }
     .meta code { color: var(--soft); }
 
-    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); }
     .toolbar button {
       background: var(--panel);
       color: var(--soft);
@@ -126,7 +134,7 @@
     }
     #body::placeholder { color: #4a4a52; }
 
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
     .actions button {
       font-family: var(--font-display);
       font-weight: 600;
@@ -167,7 +175,7 @@
     .content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: var(--radius-md); display: block; }
     .content blockquote { margin: 1.4em 0; padding: 4px 0 4px 20px; border-left: 2px solid var(--line); color: var(--soft); font-style: italic; }
     .content code { font-family: var(--font-mono); font-size: 0.88em; background: rgba(var(--paper-rgb),0.08); padding: 2px 6px; border-radius: var(--radius-sm); }
-    .content pre { background: rgba(var(--paper-rgb),0.05); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 16px; overflow: auto; }
+    .content pre { background: rgba(var(--paper-rgb),0.05); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4); overflow: auto; }
     .content pre code { background: none; padding: 0; }
     .content ul, .content ol { padding-left: 1.3em; }
     .content li + li { margin-top: 0.4em; }

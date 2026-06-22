@@ -44,6 +44,16 @@ reservados a brilhos e sombras.
 
 Círculos usam `50%`; o raio do `outline` de foco fica em `2px` literal.
 
+## Espaçamento
+
+Escala de base 4 para `gap` e espaçamentos simples:
+`--space-1: 4px` · `--space-2: 8px` · `--space-3: 12px` · `--space-4: 16px` ·
+`--space-5: 24px` · `--space-6: 32px` · `--space-7: 48px`.
+
+Use os tokens para `gap` e paddings de valor único. Paddings compostos de
+layout (ex.: `40px 22px 120px` no `.wrap`) e a maré tipográfica (`margin` entre
+parágrafos/headings) seguem calibrados na unha — não force a escala neles.
+
 ## Convenções
 
 - **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa uma variação própria por causa da malha animada.
