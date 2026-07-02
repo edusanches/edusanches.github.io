@@ -120,17 +120,30 @@
       cursor: pointer;
       perspective: 600px;                 /* real depth for the push-in */
     }
-    /* Soft halo behind the photo — opens up as the photo recedes */
-    .avatar::before {
-      content: "";
+    /* Sonar rings — 1px hairlines that ripple outward, synced with the
+       mesh shockwave fired on hover/tap (see burst() below) */
+    .avatar .pulse {
       position: absolute;
-      inset: -14px;
+      inset: -1px;
       border-radius: 50%;
       z-index: -1;
-      background: radial-gradient(closest-side, rgba(var(--paper-rgb), 0.3), transparent 77%);
-      opacity: 0.55;
+      border: 1px solid rgba(var(--paper-rgb), 0.55);
+      opacity: 0;
       pointer-events: none;
-      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+    }
+    .avatar .pulse + .pulse {
+      border-color: rgba(var(--paper-rgb), 0.32);
+    }
+    .avatar.is-pulsing .pulse {
+      animation: avatar-ring 1.15s cubic-bezier(0.2, 0.55, 0.3, 1) both;
+    }
+    .avatar.is-pulsing .pulse + .pulse {
+      animation-delay: 0.18s;
+    }
+    @keyframes avatar-ring {
+      0%   { transform: scale(1); opacity: 0; }
+      12%  { opacity: 1; }
+      100% { transform: scale(2.3); opacity: 0; }
     }
     /* Rim shadow that recedes with the photo — sets it into a recess */
     .avatar::after {
@@ -149,6 +162,7 @@
       object-fit: cover;
       border-radius: 50%;
       display: block;
+      box-shadow: 0 0 0 1px var(--line);  /* resting hairline rim, echoes the grid */
       transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.5s ease;
     }
     @media (hover: hover) {
@@ -159,10 +173,6 @@
       .avatar:hover::after {
         transform: translateZ(-65px);     /* travels with the photo, framing it */
         opacity: 1;
-      }
-      .avatar:hover::before {
-        transform: scale(1.42);           /* halo opens outward */
-        opacity: 0.95;
       }
     }
 
@@ -255,8 +265,9 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .social-button, .social-button::before, .profile-image, .avatar::before, .avatar::after { transition: none; }
-      .avatar:hover .profile-image, .avatar:hover::before, .avatar:hover::after { transform: none; }
+      .social-button, .social-button::before, .profile-image, .avatar::after { transition: none; }
+      .avatar:hover .profile-image, .avatar:hover::after { transform: none; }
+      .avatar.is-pulsing .pulse { animation: none; }
     }
   </style>
 </head>
@@ -266,6 +277,8 @@
 
   <main class="stage">
     <span class="avatar">
+      <span class="pulse" aria-hidden="true"></span>
+      <span class="pulse" aria-hidden="true"></span>
       <img src="profile.jpg" alt="Profile picture of Eduardo Sanches" class="profile-image" width="120" height="120" decoding="async" />
     </span>
 
@@ -328,7 +341,7 @@
       if (Date.now() - touchTime < 700) return;
       targetMX = e.clientX;
       targetMY = e.clientY;
-      warpTarget = 1;
+      warpTarget = overAvatar ? 0 : 1;   // over the photo the well takes over
     }
     // Touch equivalent of :hover — fill the button under the finger
     function highlightButtonAt(x, y) {
@@ -358,8 +371,8 @@
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
     // Fade the warp out when the pointer leaves the viewport or the window loses focus
-    document.documentElement.addEventListener("mouseleave", function () { warpTarget = 0; });
-    window.addEventListener("blur", function () { warpTarget = 0; });
+    document.documentElement.addEventListener("mouseleave", function () { warpTarget = 0; wellTarget = 0; overAvatar = false; });
+    window.addEventListener("blur", function () { warpTarget = 0; wellTarget = 0; overAvatar = false; });
     // On touch release, ease the warp out in place (don't snap it away)
     function clearTouch() {
       touchTime = Date.now();
@@ -471,7 +484,13 @@
       ctx.fill();
     }
 
-    // ---- Explosion shockwave (triggered by hovering the photo) ----
+    // ---- Gravity well: the photo presses into the mesh while hovered ----
+    var WELL_AMP = 140;      // depth of the dent at full press (world units)
+    var WELL_RADIUS = 300;   // screen-space radius around the photo centre
+    var wellAmt = 0, wellTarget = 0;
+    var overAvatar = false;
+
+    // ---- Explosion shockwave (fired when the photo is released) ----
     var EXP_DUR = 1.8;       // seconds the wave lives
     var EXP_SPEED = 950;     // world units/sec the wavefront travels outward
     var EXP_SIGMA = 190;     // ring thickness
@@ -484,6 +503,8 @@
 
     function renderScene(t) {
       warpAmt += (warpTarget - warpAmt) * 0.10;   // ease the warp intensity in/out
+      wellAmt += (wellTarget - wellAmt) * 0.09;   // press in / spring back
+      var wellActive = wellAmt > 0.004;
       if (warpAmt < 0.01) {
         mouseX = targetMX; mouseY = targetMY;       // idle: park position at the pointer so the next ease-in starts there
       } else {
@@ -525,9 +546,27 @@
           }
         }
       }
-      // Project (need screen pos to measure mouse distance)
+      // Project (need screen pos to measure mouse / photo distance)
       for (i = 0; i <= cols; i++) {
         for (j = 0; j <= rows; j++) project(points[i][j]);
+      }
+      // Gravity well: press the surface away around the photo. Uses
+      // screen-space distance (like the mouse warp) so the dent stays
+      // centred on the photo despite the camera tilt.
+      if (wellActive) {
+        for (i = 0; i <= cols; i++) {
+          for (j = 0; j <= rows; j++) {
+            p = points[i][j];
+            var wdx = p.sx - originX, wdy = p.sy - originY;
+            var wd = Math.sqrt(wdx * wdx + wdy * wdy);
+            if (wd < WELL_RADIUS) {
+              var winf = 1 - wd / WELL_RADIUS;
+              var we = winf * winf * wellAmt;
+              p.y += we * WELL_AMP;              // dent away from the viewer
+              if (we * 0.35 > p.lift) p.lift = we * 0.35;  // brighten the funnel walls
+            }
+          }
+        }
       }
       // Mouse warp: lift surface toward viewer near the cursor
       if (mouseActive) {
@@ -544,6 +583,9 @@
             }
           }
         }
+      }
+      // Re-project everything the well / warp displaced
+      if (wellActive || mouseActive) {
         for (i = 0; i <= cols; i++) {
           for (j = 0; j <= rows; j++) {
             if (points[i][j].lift > 0) project(points[i][j]);
@@ -631,13 +673,29 @@
       else if (mq.addListener) mq.addListener(onMq);
     }
 
-    // Trigger a shockwave when the photo is hovered (or tapped on touch)
+    // Press → release → ripple: hovering the photo dents the mesh (gravity
+    // well); releasing lets the fabric spring back and fires the shockwave.
     if (avatarEl) {
       var burst = function () {
         if (reduceMotion) return;
         if (explosions.length < 5) explosions.push({ t0: lastT });
+        // Restart the sonar rings in sync with the mesh shockwave
+        avatarEl.classList.remove("is-pulsing");
+        void avatarEl.offsetWidth;   // reflow so the animation re-triggers
+        avatarEl.classList.add("is-pulsing");
       };
-      avatarEl.addEventListener("mouseenter", burst);
+      avatarEl.addEventListener("mouseenter", function () {
+        if (Date.now() - touchTime < 700) return;   // ignore ghost hover after touch
+        overAvatar = true;
+        if (!reduceMotion) { wellTarget = 1; warpTarget = 0; }
+      });
+      avatarEl.addEventListener("mouseleave", function () {
+        if (Date.now() - touchTime < 700) return;
+        overAvatar = false;
+        wellTarget = 0;
+        burst();
+      });
+      // No sustained hover on touch — a tap is press + release in one
       avatarEl.addEventListener("touchstart", burst, { passive: true });
     }
 
