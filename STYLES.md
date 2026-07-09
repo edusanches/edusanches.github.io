@@ -56,7 +56,7 @@ parágrafos/headings) seguem calibrados na unha — não force a escala neles.
 
 ## Convenções
 
-- **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa uma variação própria por causa da malha animada.
+- **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa um campo tonal "líquido" (WebGL; fallback estático em canvas 2D e, sem JS, gradientes CSS no `body` — os três compartilham a mesma rampa de cores).
 - **Largura de leitura:** `max-width: 680px` no blog.
 - **Foco:** `:focus-visible` com `outline: 2px solid rgba(var(--paper-rgb), .7)`.
 - **Movimento:** sempre respeitar `@media (prefers-reduced-motion: reduce)`.

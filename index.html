@@ -11,7 +11,7 @@
   <!-- Favicon -->
   <link rel="icon" href="favicon.png" type="image/png" />
 
-  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="theme-color" content="#cf6a2b" />
   <meta name="color-scheme" content="dark" />
 
   <!-- Google Fonts: Sora (display) · Inter (body) · IBM Plex Mono (utility) -->
@@ -59,7 +59,17 @@
       font-family: var(--font-body);
       color: var(--paper);
       text-align: center;
-      background: radial-gradient(125% 95% at 50% -10%, #18181a 0%, var(--ink) 56%, #050506 100%);
+      /* Warm/teal tonal field: eclipse blobs with hot rims over a teal
+         channel, oranges in the corners — the mesh draws on top of this */
+      background-color: #d94e1c;
+      background:
+        radial-gradient(52% 55% at 78% 6%, #140a0f 0%, #140a0f 26%, #4a1013 38%, #d13b16 47%, #ff8c30 53%, rgba(255, 140, 48, 0) 60%),
+        radial-gradient(55% 60% at 18% 102%, #150a0e 0%, #150a0e 24%, #4d1013 37%, #d43d15 46%, #ff9134 52%, rgba(255, 145, 52, 0) 59%),
+        radial-gradient(58% 42% at 2% 2%, #ecad5f 0%, rgba(236, 173, 95, 0) 50%),
+        radial-gradient(52% 42% at 100% 100%, #f0a04e 0%, rgba(240, 160, 78, 0) 48%),
+        radial-gradient(75% 44% at 30% 40%, #1e5058 0%, #1e5058 38%, rgba(30, 80, 88, 0) 58%),
+        radial-gradient(80% 46% at 74% 70%, #1b4b53 0%, #1b4b53 40%, rgba(27, 75, 83, 0) 60%),
+        linear-gradient(160deg, #dd8a38 0%, #d94e1c 45%, #e0812f 100%);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       overflow: hidden;
@@ -69,24 +79,33 @@
       justify-content: center;
       padding: 44px 20px;
     }
+    /* Portrait: re-aim the field so the teal reads as a diagonal channel
+       between the two eclipse blobs (same palette, different geometry) */
+    @media (orientation: portrait) {
+      body {
+        background:
+          radial-gradient(80% 38% at 82% 10%, #140a0f 0%, #140a0f 22%, #4a1013 36%, #d13b16 46%, #ff8c30 52%, rgba(255, 140, 48, 0) 60%),
+          radial-gradient(85% 40% at 30% 98%, #150a0e 0%, #150a0e 20%, #4d1013 34%, #d43d15 44%, #ff9134 51%, rgba(255, 145, 52, 0) 59%),
+          radial-gradient(70% 30% at 0% 0%, #ecad5f 0%, rgba(236, 173, 95, 0) 55%),
+          radial-gradient(65% 28% at 100% 100%, #f0a04e 0%, rgba(240, 160, 78, 0) 52%),
+          radial-gradient(75% 26% at 16% 42%, #1e5058 0%, #1e5058 36%, rgba(30, 80, 88, 0) 58%),
+          radial-gradient(80% 28% at 84% 62%, #1b4b53 0%, #1b4b53 38%, rgba(27, 75, 83, 0) 60%),
+          radial-gradient(60% 22% at 50% 52%, #1d4f57 0%, #1d4f57 34%, rgba(29, 79, 87, 0) 60%),
+          linear-gradient(170deg, #dd8a38 0%, #d94e1c 45%, #e0812f 100%);
+      }
+    }
 
-    canvas#mesh {
+    /* Liquid tonal field: WebGL when available (animated, mouse-reactive),
+       otherwise a single static 2D render. The CSS gradients on body are
+       the no-JS fallback. */
+    canvas#field {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       z-index: -1;
       display: block;
-      touch-action: none;
-    }
-
-    /* Soft vignette to settle the mesh behind the content (flat, no glow) */
-    .atmosphere {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
       pointer-events: none;
-      background: radial-gradient(70% 56% at 50% 46%, transparent 46%, rgba(5, 5, 6, 0.55) 100%);
     }
 
     /* ===== Content: no card, flat elements floating over the mesh ===== */
@@ -94,20 +113,6 @@
       position: relative;
       z-index: 1;
       width: min(460px, 92vw);
-    }
-    /* Soft dark halo behind the photo / name / tagline to mute the grid there */
-    .stage::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      left: 50%;
-      top: -16px;
-      width: 100%;
-      height: 330px;
-      transform: translateX(-50%);
-      background: radial-gradient(50% 50% at 50% 50%, rgba(8, 8, 9, 0.92) 0%, rgba(8, 8, 9, 0.55) 42%, rgba(8, 8, 9, 0) 72%);
-      filter: blur(4px);
-      pointer-events: none;
     }
 
     .avatar {
@@ -272,8 +277,7 @@
   </style>
 </head>
 <body>
-  <canvas id="mesh" aria-hidden="true"></canvas>
-  <div class="atmosphere" aria-hidden="true"></div>
+  <canvas id="field" aria-hidden="true"></canvas>
 
   <main class="stage">
     <span class="avatar">
@@ -294,54 +298,751 @@
   </main>
 
   <script>
+  // Liquid tonal field.
+  // Display: one scalar field (gaussian blobs/wells + domain warp + colour
+  // ramp + grain) rendered by a fragment shader. The photo press/ripple and
+  // the slow autonomous drift live here.
+  // Fluid: when WebGL2 + float buffers are available, a real Navier-Stokes
+  // simulation (velocity advection + pressure projection on a small grid)
+  // warps the field's sampling coordinates — the mouse genuinely stirs the
+  // liquid and it swirls, spreads and settles back on its own.
+  // Fallbacks: WebGL1 -> same display, ripple-trail instead of fluid;
+  // no WebGL -> one static 2D render; no JS -> the CSS gradients on body.
   (function () {
     "use strict";
 
-    var canvas = document.getElementById("mesh");
-    var ctx = canvas.getContext("2d", { alpha: true });
+    var cv = document.getElementById("field");
+    if (!cv) return;
+
     var reduceMotion = window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     var avatarEl = document.querySelector(".avatar");
-    // Projection origin — anchored to the centre of the photo, not the viewport
-    var originX = 0, originY = 0;
-
-    // ---- Flat line colour (monochrome white, no gradient / no glow) ----
-    var LINE = [240, 242, 247];
-
-    // ---- Adaptive tunables ----
-    var DPR = 1;
-    var isMobile = window.innerWidth < 720;
-    var spacing = isMobile ? 70 : 74;     // larger spacing -> fewer nodes (perf)
-
-    // Perspective / camera (direct descendant of the original grid)
-    var cameraAngle = Math.PI / 3.2;
-    var cameraHeight = 120;
-    var perspective = 1500;
-    var cosA = Math.cos(cameraAngle);
-    var sinA = Math.sin(cameraAngle);
-
-    // Wave config — multi-octave undulation
-    var waveLength = 320;
-    var baseAmp = isMobile ? 16 : 22;
-    var mouseRadius = 230;
-    var maxDepth = 1150;
-
-    var W = 0, H = 0, cols = 0, rows = 0, points = [];
-
-    // Smoothed mouse + eased warp intensity (eases in on contact, out on release)
-    var mouseX = 0, mouseY = 0;
-    var targetMX = 0, targetMY = 0;
-    var warpAmt = 0, warpTarget = 0;
-
     var buttons = document.querySelectorAll(".social-button");
+
+    var DPR = 1, W = 0, H = 0;
+
+    function sizeCanvas() {
+      DPR = Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
+      W = Math.max(1, Math.round(window.innerWidth * DPR));
+      H = Math.max(1, Math.round(window.innerHeight * DPR));
+      var CAP = 4200000;
+      if (W * H > CAP) {
+        var s = Math.sqrt(CAP / (W * H));
+        W = Math.round(W * s);
+        H = Math.round(H * s);
+      }
+      cv.width = W;
+      cv.height = H;
+      cv.style.width = window.innerWidth + "px";
+      cv.style.height = window.innerHeight + "px";
+    }
+
+    // window px -> device px (canvas coords, y up like gl_FragCoord)
+    function toDev(cx, cy) {
+      return [cx * (W / window.innerWidth), H - cy * (H / window.innerHeight)];
+    }
+
+    /* ================= static 2D fallback ================= */
+
+    var STOPS = [
+      [0.00, 18, 63, 73], [0.30, 29, 81, 90], [0.52, 230, 167, 92],
+      [0.62, 234, 127, 46], [0.70, 255, 150, 52], [0.78, 212, 59, 22],
+      [0.88, 74, 16, 19], [1.00, 18, 10, 14]
+    ];
+
+    function blobsFor(portrait) {
+      return portrait ? [
+        { x: 0.82, y: 0.08, sx: 0.42, sy: 0.24, a: 0.62 },
+        { x: 0.22, y: 0.98, sx: 0.45, sy: 0.26, a: 0.62 },
+        { x: 0.12, y: 0.40, sx: 0.34, sy: 0.16, a: -0.60 },
+        { x: 0.55, y: 0.52, sx: 0.30, sy: 0.15, a: -0.55 },
+        { x: 0.92, y: 0.62, sx: 0.34, sy: 0.16, a: -0.60 },
+        { x: 0.02, y: 0.02, sx: 0.30, sy: 0.18, a: 0.10 },
+        { x: 0.98, y: 0.98, sx: 0.30, sy: 0.18, a: 0.10 }
+      ] : [
+        { x: 0.78, y: 0.04, sx: 0.26, sy: 0.34, a: 0.62 },
+        { x: 0.16, y: 1.00, sx: 0.28, sy: 0.38, a: 0.62 },
+        { x: 0.24, y: 0.42, sx: 0.26, sy: 0.22, a: -0.60 },
+        { x: 0.58, y: 0.56, sx: 0.24, sy: 0.20, a: -0.52 },
+        { x: 0.90, y: 0.66, sx: 0.28, sy: 0.22, a: -0.60 },
+        { x: 0.02, y: 0.02, sx: 0.24, sy: 0.26, a: 0.10 },
+        { x: 0.99, y: 0.98, sx: 0.24, sy: 0.26, a: 0.10 }
+      ];
+    }
+
+    function render2d() {
+      var ctx2 = cv.getContext("2d", { alpha: false });
+      if (!ctx2) return;
+      var LUT = new Uint8Array(1024 * 3);
+      for (var i = 0; i < 1024; i++) {
+        var t = i / 1023, s = 0;
+        while (s < STOPS.length - 2 && t > STOPS[s + 1][0]) s++;
+        var a = STOPS[s], b = STOPS[s + 1];
+        var k = (t - a[0]) / (b[0] - a[0]);
+        k = k < 0 ? 0 : k > 1 ? 1 : k;
+        LUT[i * 3] = a[1] + (b[1] - a[1]) * k;
+        LUT[i * 3 + 1] = a[2] + (b[2] - a[2]) * k;
+        LUT[i * 3 + 2] = a[3] + (b[3] - a[3]) * k;
+      }
+      var STEP = 4;
+      var G = blobsFor(H > W);
+      var gw = Math.ceil(W / STEP) + 2, gh = Math.ceil(H / STEP) + 2;
+      var field = new Float32Array(gw * gh);
+      for (var gy = 0; gy < gh; gy++) {
+        var v = (gy * STEP) / H;
+        for (var gx = 0; gx < gw; gx++) {
+          var u = (gx * STEP) / W;
+          var wu = u + 0.045 * Math.sin(v * 4.6 + 1.2) + 0.02 * Math.sin(v * 10.3 + 3.1);
+          var wv = v + 0.055 * Math.sin(u * 3.9 + 0.6) + 0.02 * Math.sin(u * 8.3 + 5.0);
+          var f = 0.60;
+          for (var bi = 0; bi < G.length; bi++) {
+            var g = G[bi];
+            var dx = (wu - g.x) / g.sx, dy = (wv - g.y) / g.sy;
+            var q = dx * dx + dy * dy;
+            if (q < 9) f += g.a * Math.exp(-q);
+          }
+          field[gy * gw + gx] = f;
+        }
+      }
+      var img = ctx2.createImageData(W, H);
+      var d = img.data;
+      var seed = 0x9e3779b9 | 0;
+      var p = 0;
+      for (var y = 0; y < H; y++) {
+        var fy = y / STEP, y0 = fy | 0, ty = fy - y0;
+        var r0 = y0 * gw, r1 = r0 + gw;
+        for (var x = 0; x < W; x++) {
+          var fx = x / STEP, x0 = fx | 0, tx = fx - x0;
+          var f00 = field[r0 + x0], f10 = field[r0 + x0 + 1];
+          var f01 = field[r1 + x0], f11 = field[r1 + x0 + 1];
+          var top = f00 + (f10 - f00) * tx;
+          var bot = f01 + (f11 - f01) * tx;
+          var f = top + (bot - top) * ty;
+          var tt = f < 0 ? 0 : f > 1 ? 1 : f;
+          var idx = ((tt * 1023) | 0) * 3;
+          seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+          var n = ((seed & 255) / 255 - 0.5) * 26;
+          var rr = LUT[idx] + n, gg = LUT[idx + 1] + n, bb = LUT[idx + 2] + n;
+          d[p] = rr < 0 ? 0 : rr > 255 ? 255 : rr;
+          d[p + 1] = gg < 0 ? 0 : gg > 255 ? 255 : gg;
+          d[p + 2] = bb < 0 ? 0 : bb > 255 ? 255 : bb;
+          d[p + 3] = 255;
+          p += 4;
+        }
+      }
+      ctx2.putImageData(img, 0, 0);
+    }
+
+    /* ================= WebGL ================= */
+
+    var gl = null, isGL2 = false;
+    var CTX_OPTS = { antialias: false, alpha: false };
+    try {
+      gl = cv.getContext("webgl2", CTX_OPTS);
+      if (gl) isGL2 = true;
+      else gl = cv.getContext("webgl", CTX_OPTS) ||
+                cv.getContext("experimental-webgl", CTX_OPTS);
+    } catch (e) { gl = null; }
+
+    var VERT = [
+      "attribute vec2 aP;",
+      "varying vec2 vUv;",
+      "void main() {",
+      "  vUv = aP * 0.5 + 0.5;",
+      "  gl_Position = vec4(aP, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FRAG = [
+      "precision highp float;",
+      "uniform vec2 uRes;",
+      "uniform float uTime;",
+      "uniform float uStatic;",
+      "uniform vec2 uOrigin;",
+      "uniform float uPress;",
+      "uniform vec4 uRip[10];",
+      "uniform sampler2D uNoise;",
+      "uniform sampler2D uFlow;",
+      "uniform vec2 uFlowSize;",
+      "",
+      "vec3 ramp(float t) {",
+      "  t = clamp(t, 0.0, 1.0);",
+      "  vec3 c0 = vec3(0.0706, 0.2471, 0.2863);",
+      "  vec3 c1 = vec3(0.1137, 0.3176, 0.3529);",
+      "  vec3 c2 = vec3(0.9020, 0.6549, 0.3608);",
+      "  vec3 c3 = vec3(0.9176, 0.4980, 0.1804);",
+      "  vec3 c4 = vec3(1.0000, 0.5882, 0.2039);",
+      "  vec3 c5 = vec3(0.8314, 0.2314, 0.0863);",
+      "  vec3 c6 = vec3(0.2902, 0.0627, 0.0745);",
+      "  vec3 c7 = vec3(0.0706, 0.0392, 0.0549);",
+      "  if (t < 0.30) return mix(c0, c1, t / 0.30);",
+      "  if (t < 0.52) return mix(c1, c2, (t - 0.30) / 0.22);",
+      "  if (t < 0.62) return mix(c2, c3, (t - 0.52) / 0.10);",
+      "  if (t < 0.70) return mix(c3, c4, (t - 0.62) / 0.08);",
+      "  if (t < 0.78) return mix(c4, c5, (t - 0.70) / 0.08);",
+      "  if (t < 0.88) return mix(c5, c6, (t - 0.78) / 0.10);",
+      "  return mix(c6, c7, (t - 0.88) / 0.12);",
+      "}",
+      "",
+      "float g2(vec2 w, vec2 c, vec2 s) {",
+      "  vec2 d = (w - c) / s;",
+      "  return exp(-dot(d, d));",
+      "}",
+      "",
+      "void main() {",
+      "  float minD = min(uRes.x, uRes.y);",
+      "  float T = uTime * (1.0 - uStatic);",
+      "  /* fluid: displace the sampling point by the advected offset map.",
+      "     Smoothed bilinear lookup — plain bilinear creases at texel edges",
+      "     when magnified, which reads as a blocky grid */",
+      "  vec2 fst = (gl_FragCoord.xy / uRes) * uFlowSize - 0.5;",
+      "  vec2 fi = floor(fst);",
+      "  vec2 ff = fst - fi;",
+      "  ff = ff * ff * (3.0 - 2.0 * ff);",
+      "  vec2 fuv = (fi + 0.5 + ff) / uFlowSize;",
+      "  vec2 p = gl_FragCoord.xy + texture2D(uFlow, fuv).rg * uRes;",
+      "",
+      "  /* ripples: travelling circular waves fired from the photo (and,",
+      "     without the fluid sim, seeded along the pointer's path) */",
+      "  float fBump = 0.0;",
+      "  for (int i = 0; i < 10; i++) {",
+      "    vec4 rp = uRip[i];",
+      "    if (rp.z >= 0.0) {",
+      "      float env = 1.0 - rp.z / 1.8;",
+      "      if (env > 0.0) {",
+      "        float s = rp.w;",
+      "        float sq = sqrt(s);",
+      "        vec2 rd = p - rp.xy;",
+      "        float dist = length(rd) + 1e-4;",
+      "        float rad = rp.z * 0.62 * minD * s;",
+      "        float xx = (dist - rad) / (0.09 * minD * sq);",
+      "        float ring = exp(-xx * xx);",
+      "        p += (rd / dist) * ring * env * 0.045 * minD * sq;",
+      "        fBump += 0.14 * ring * env * sq;",
+      "      }",
+      "    }",
+      "  }",
+      "",
+      "  /* press: the photo pushes the liquid toward the teal floor */",
+      "  vec2 od = (p - uOrigin) / (0.30 * minD);",
+      "  float dent = exp(-dot(od, od)) * uPress;",
+      "",
+      "  vec2 q = p / uRes;",
+      "  float u = q.x;",
+      "  float v = 1.0 - q.y;",
+      "  float wu = u + 0.045 * sin(v * 4.6 + 1.2 + T * 0.21) + 0.02 * sin(v * 10.3 + 3.1 - T * 0.17);",
+      "  float wv = v + 0.055 * sin(u * 3.9 + 0.6 + T * 0.15) + 0.02 * sin(u * 8.3 + 5.0 + T * 0.23);",
+      "  vec2 w = vec2(wu, wv);",
+      "",
+      "  float f = 0.60 + fBump - 0.30 * dent;",
+      "  vec2 dr1 = 0.013 * vec2(sin(T * 0.11), cos(T * 0.10));",
+      "  vec2 dr2 = 0.015 * vec2(sin(T * 0.09 + 2.1), cos(T * 0.12 + 1.0));",
+      "  vec2 dr3 = 0.016 * vec2(sin(T * 0.10 + 4.0), cos(T * 0.08 + 0.7));",
+      "  vec2 dr4 = 0.014 * vec2(sin(T * 0.12 + 5.3), cos(T * 0.09 + 3.6));",
+      "  vec2 dr5 = 0.015 * vec2(sin(T * 0.08 + 1.6), cos(T * 0.11 + 5.1));",
+      "  if (uRes.y > uRes.x) {",
+      "    f += 0.62 * g2(w, vec2(0.82, 0.08) + dr1, vec2(0.42, 0.24));",
+      "    f += 0.62 * g2(w, vec2(0.22, 0.98) + dr2, vec2(0.45, 0.26));",
+      "    f -= 0.60 * g2(w, vec2(0.12, 0.40) + dr3, vec2(0.34, 0.16));",
+      "    f -= 0.55 * g2(w, vec2(0.55, 0.52) + dr4, vec2(0.30, 0.15));",
+      "    f -= 0.60 * g2(w, vec2(0.92, 0.62) + dr5, vec2(0.34, 0.16));",
+      "    f += 0.10 * g2(w, vec2(0.02, 0.02), vec2(0.30, 0.18));",
+      "    f += 0.10 * g2(w, vec2(0.98, 0.98), vec2(0.30, 0.18));",
+      "  } else {",
+      "    f += 0.62 * g2(w, vec2(0.78, 0.04) + dr1, vec2(0.26, 0.34));",
+      "    f += 0.62 * g2(w, vec2(0.16, 1.00) + dr2, vec2(0.28, 0.38));",
+      "    f -= 0.60 * g2(w, vec2(0.24, 0.42) + dr3, vec2(0.26, 0.22));",
+      "    f -= 0.52 * g2(w, vec2(0.58, 0.56) + dr4, vec2(0.24, 0.20));",
+      "    f -= 0.60 * g2(w, vec2(0.90, 0.66) + dr5, vec2(0.28, 0.22));",
+      "    f += 0.10 * g2(w, vec2(0.02, 0.02), vec2(0.24, 0.26));",
+      "    f += 0.10 * g2(w, vec2(0.99, 0.98), vec2(0.24, 0.26));",
+      "  }",
+      "",
+      "  vec3 col = ramp(f);",
+      "  col += fBump * 0.45;   /* light catching the wave crests */",
+      "  float gr = texture2D(uNoise, gl_FragCoord.xy / 256.0).r;",
+      "  col += (gr - 0.5) * 0.102;",
+      "  gl_FragColor = vec4(col, 1.0);",
+      "}"
+    ].join("\n");
+
+    /* --- fluid sim shaders (WebGL2 + float buffers only) --- */
+
+    var FS_SPLAT = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uTarget;",
+      "uniform vec2 uPoint;",
+      "uniform vec2 uValue;",
+      "uniform float uRadius;",
+      "uniform float uAspect;",
+      "void main() {",
+      "  vec2 d = vUv - uPoint;",
+      "  d.x *= uAspect;",
+      "  vec2 base = texture2D(uTarget, vUv).rg;",
+      "  float g = exp(-dot(d, d) / uRadius);",
+      "  gl_FragColor = vec4(base + uValue * g, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FS_ADVECT_VEL = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uVel;",
+      "uniform float uDt;",
+      "uniform float uDiss;",
+      "void main() {",
+      "  vec2 vel = texture2D(uVel, vUv).rg;",
+      "  vec2 back = vUv - uDt * vel;",
+      "  gl_FragColor = vec4(texture2D(uVel, back).rg * uDiss, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FS_ADVECT_FLOW = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uVel;",
+      "uniform sampler2D uSrc;",
+      "uniform float uDt;",
+      "uniform float uRelax;",
+      "void main() {",
+      "  vec2 vel = texture2D(uVel, vUv).rg;",
+      "  vec2 back = vUv - uDt * vel;",
+      "  /* carry the offset with the flow and accumulate the displacement */",
+      "  vec2 D = texture2D(uSrc, back).rg - uDt * vel;",
+      "  gl_FragColor = vec4(D * (1.0 - uRelax), 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FS_DIVERGENCE = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uVel;",
+      "uniform vec2 uTexel;",
+      "void main() {",
+      "  float L = texture2D(uVel, vUv - vec2(uTexel.x, 0.0)).r;",
+      "  float R = texture2D(uVel, vUv + vec2(uTexel.x, 0.0)).r;",
+      "  float B = texture2D(uVel, vUv - vec2(0.0, uTexel.y)).g;",
+      "  float T = texture2D(uVel, vUv + vec2(0.0, uTexel.y)).g;",
+      "  gl_FragColor = vec4(0.5 * (R - L + T - B), 0.0, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FS_PRESSURE = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uPressure;",
+      "uniform sampler2D uDiv;",
+      "uniform vec2 uTexel;",
+      "void main() {",
+      "  float L = texture2D(uPressure, vUv - vec2(uTexel.x, 0.0)).r;",
+      "  float R = texture2D(uPressure, vUv + vec2(uTexel.x, 0.0)).r;",
+      "  float B = texture2D(uPressure, vUv - vec2(0.0, uTexel.y)).r;",
+      "  float T = texture2D(uPressure, vUv + vec2(0.0, uTexel.y)).r;",
+      "  float div = texture2D(uDiv, vUv).r;",
+      "  gl_FragColor = vec4((L + R + B + T - div) * 0.25, 0.0, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    var FS_GRADIENT = [
+      "precision highp float;",
+      "varying vec2 vUv;",
+      "uniform sampler2D uPressure;",
+      "uniform sampler2D uVel;",
+      "uniform vec2 uTexel;",
+      "void main() {",
+      "  float L = texture2D(uPressure, vUv - vec2(uTexel.x, 0.0)).r;",
+      "  float R = texture2D(uPressure, vUv + vec2(uTexel.x, 0.0)).r;",
+      "  float B = texture2D(uPressure, vUv - vec2(0.0, uTexel.y)).r;",
+      "  float T = texture2D(uPressure, vUv + vec2(0.0, uTexel.y)).r;",
+      "  vec2 vel = texture2D(uVel, vUv).rg;",
+      "  vel -= 0.5 * vec2(R - L, T - B);",
+      "  gl_FragColor = vec4(vel, 0.0, 1.0);",
+      "}"
+    ].join("\n");
+
+    function compile(type, src) {
+      var sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) return null;
+      return sh;
+    }
+
+    function makeProgram(fsSrc) {
+      var vs = compile(gl.VERTEX_SHADER, VERT);
+      var fs = compile(gl.FRAGMENT_SHADER, fsSrc);
+      if (!vs || !fs) return null;
+      var pr = gl.createProgram();
+      gl.attachShader(pr, vs);
+      gl.attachShader(pr, fs);
+      gl.bindAttribLocation(pr, 0, "aP");
+      gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+      return pr;
+    }
+
+    var prog = null, uni = {};
+    function initGL() {
+      prog = makeProgram(FRAG);
+      if (!prog) return false;
+      gl.useProgram(prog);
+      var buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      var names = ["uRes", "uTime", "uStatic", "uOrigin", "uPress", "uFlowSize"];
+      for (var i = 0; i < names.length; i++) uni[names[i]] = gl.getUniformLocation(prog, names[i]);
+      uni.uRip = gl.getUniformLocation(prog, "uRip[0]") || gl.getUniformLocation(prog, "uRip");
+      // Real white-noise tile for the film grain (unit 0)
+      var noise = new Uint8Array(256 * 256);
+      var ns = 0x2545f491 | 0;
+      for (var n = 0; n < noise.length; n++) {
+        ns ^= ns << 13; ns ^= ns >>> 17; ns ^= ns << 5;
+        noise[n] = ns & 255;
+      }
+      var tex = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 256, 256, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, noise);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      gl.uniform1i(gl.getUniformLocation(prog, "uNoise"), 0);
+      // Zero flow texture (unit 1) — replaced by the sim's offset map
+      var zero = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, zero);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+      gl.uniform1i(gl.getUniformLocation(prog, "uFlow"), 1);
+      noiseTex = tex;
+      zeroTex = zero;
+      return true;
+    }
+
+    var noiseTex = null, zeroTex = null;
+
+    /* ---------- fluid sim ---------- */
+
+    var fluid = null;
+
+    function initFluid() {
+      if (!isGL2) return null;
+      if (!gl.getExtension("EXT_color_buffer_float")) return null;
+
+      var progs = {
+        splat: makeProgram(FS_SPLAT),
+        advVel: makeProgram(FS_ADVECT_VEL),
+        advFlow: makeProgram(FS_ADVECT_FLOW),
+        div: makeProgram(FS_DIVERGENCE),
+        press: makeProgram(FS_PRESSURE),
+        grad: makeProgram(FS_GRADIENT)
+      };
+      for (var k in progs) if (!progs[k]) return null;
+
+      var simH = 128, simW = 128, texel = [0, 0];
+      var flowW = 128, flowH = 128;
+
+      function makeTex(w, h, internal, format) {
+        var t = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, gl.HALF_FLOAT, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        return t;
+      }
+
+      function makePair(w, h, internal, format) {
+        var a = { tex: makeTex(w, h, internal, format), fbo: gl.createFramebuffer() };
+        var b = { tex: makeTex(w, h, internal, format), fbo: gl.createFramebuffer() };
+        gl.bindFramebuffer(gl.FRAMEBUFFER, a.fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, a.tex, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, b.fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, b.tex, 0);
+        var ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return ok ? { r: a, w: b, swap: function () { var t = this.r; this.r = this.w; this.w = t; } } : null;
+      }
+
+      var vel = null, flow = null, prs = null, dvg = null;
+
+      function alloc() {
+        simH = 128;
+        simW = Math.max(16, Math.round(simH * (W / H)));
+        // The displayed offset map runs at higher res than the physics —
+        // at sim res its bilinear upscale reads as a blocky grid
+        flowH = Math.min(432, H);
+        flowW = Math.max(16, Math.round(flowH * (W / H)));
+        texel = [1 / simW, 1 / simH];
+        vel = makePair(simW, simH, gl.RG16F, gl.RG);
+        flow = makePair(flowW, flowH, gl.RG16F, gl.RG);
+        prs = makePair(simW, simH, gl.R16F, gl.RED);
+        dvg = makePair(simW, simH, gl.R16F, gl.RED);
+        return vel && flow && prs && dvg;
+      }
+      if (!alloc()) return null;
+
+      var u = {};
+      function locs(pr, list) {
+        var o = {};
+        for (var i = 0; i < list.length; i++) o[list[i]] = gl.getUniformLocation(pr, list[i]);
+        return o;
+      }
+      u.splat = locs(progs.splat, ["uTarget", "uPoint", "uValue", "uRadius", "uAspect"]);
+      u.advVel = locs(progs.advVel, ["uVel", "uDt", "uDiss"]);
+      u.advFlow = locs(progs.advFlow, ["uVel", "uSrc", "uDt", "uRelax"]);
+      u.div = locs(progs.div, ["uVel", "uTexel"]);
+      u.press = locs(progs.press, ["uPressure", "uDiv", "uTexel"]);
+      u.grad = locs(progs.grad, ["uPressure", "uVel", "uTexel"]);
+
+      function bindTex(unit, tex) {
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+      }
+
+      function pass(pr, fbo, w, h) {
+        gl.useProgram(pr);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.viewport(0, 0, w || simW, h || simH);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      var queue = [];   // pending splats {x, y (uv), vx, vy (uv/s)}
+
+      function step(dt) {
+        // 1. self-advect velocity
+        gl.useProgram(progs.advVel);
+        gl.uniform1f(u.advVel.uDt, dt);
+        gl.uniform1f(u.advVel.uDiss, 0.985);
+        bindTex(2, vel.r.tex);
+        gl.uniform1i(u.advVel.uVel, 2);
+        pass(progs.advVel, vel.w.fbo);
+        vel.swap();
+        // 2. inject the queued pointer forces
+        while (queue.length) {
+          var q = queue.shift();
+          gl.useProgram(progs.splat);
+          gl.uniform2f(u.splat.uPoint, q.x, q.y);
+          gl.uniform2f(u.splat.uValue, q.vx, q.vy);
+          gl.uniform1f(u.splat.uRadius, q.r || 0.0016);
+          gl.uniform1f(u.splat.uAspect, W / H);
+          bindTex(2, vel.r.tex);
+          gl.uniform1i(u.splat.uTarget, 2);
+          pass(progs.splat, vel.w.fbo);
+          vel.swap();
+        }
+        // 3. pressure projection (incompressible -> the swirls)
+        gl.useProgram(progs.div);
+        gl.uniform2f(u.div.uTexel, texel[0], texel[1]);
+        bindTex(2, vel.r.tex);
+        gl.uniform1i(u.div.uVel, 2);
+        pass(progs.div, dvg.w.fbo);
+        dvg.swap();
+        gl.useProgram(progs.press);
+        gl.uniform2f(u.press.uTexel, texel[0], texel[1]);
+        bindTex(3, dvg.r.tex);
+        gl.uniform1i(u.press.uDiv, 3);
+        for (var i = 0; i < 18; i++) {
+          bindTex(2, prs.r.tex);
+          gl.uniform1i(u.press.uPressure, 2);
+          pass(progs.press, prs.w.fbo);
+          prs.swap();
+        }
+        gl.useProgram(progs.grad);
+        gl.uniform2f(u.grad.uTexel, texel[0], texel[1]);
+        bindTex(2, prs.r.tex);
+        gl.uniform1i(u.grad.uPressure, 2);
+        bindTex(3, vel.r.tex);
+        gl.uniform1i(u.grad.uVel, 3);
+        pass(progs.grad, vel.w.fbo);
+        vel.swap();
+        // 4. advect the display offset map with the flow, relaxing home
+        gl.useProgram(progs.advFlow);
+        gl.uniform1f(u.advFlow.uDt, dt);
+        gl.uniform1f(u.advFlow.uRelax, 0.012);
+        bindTex(2, vel.r.tex);
+        gl.uniform1i(u.advFlow.uVel, 2);
+        bindTex(3, flow.r.tex);
+        gl.uniform1i(u.advFlow.uSrc, 3);
+        pass(progs.advFlow, flow.w.fbo, flowW, flowH);
+        flow.swap();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      }
+
+      return {
+        step: step,
+        realloc: alloc,
+        queue: queue,
+        flowTex: function () { return flow.r.tex; },
+        flowSize: function () { return [flowW, flowH]; }
+      };
+    }
+
+    /* ---- interaction state ---- */
+    var press = 0, pressTarget = 0;
+    var origin = { x: 0, y: 0 };
+    var rip = [];                 // analytic ripples { x, y, t0, s, rate }
+    var lastT = 0;
     var touchTime = -1e9;
+    var lastSX = -1e5, lastSY = -1e5, lastSpawnT = 0;
+    var pmx = -1e5, pmy = -1e5;   // previous pointer (client px) for fluid force
+
+    // Fluid path: inject the pointer's motion as force into the liquid
+    function pushForce(cx, cy) {
+      if (pmx < -1e4) { pmx = cx; pmy = cy; return; }
+      var dx = cx - pmx, dy = cy - pmy;
+      pmx = cx; pmy = cy;
+      if (dx === 0 && dy === 0) return;
+      var ux = cx / window.innerWidth;
+      var uy = 1 - cy / window.innerHeight;
+      var vx = (dx / window.innerWidth) * 42;
+      var vy = (-dy / window.innerHeight) * 42;
+      var mag = Math.sqrt(vx * vx + vy * vy);
+      if (mag > 1.4) { vx *= 1.4 / mag; vy *= 1.4 / mag; }
+      fluid.queue.push({ x: ux, y: uy, vx: vx, vy: vy });
+      if (fluid.queue.length > 24) fluid.queue.shift();
+    }
+
+    // Fallback path (no fluid): seed a small ripple along the pointer's path
+    function spawnTrail(cx, cy) {
+      var now = Date.now();
+      var dx = cx - lastSX, dy = cy - lastSY;
+      if (dx * dx + dy * dy < 90 * 90) return;
+      if (now - lastSpawnT < 130) return;
+      lastSX = cx; lastSY = cy; lastSpawnT = now;
+      var pd = toDev(cx, cy);
+      rip.push({ x: pd[0], y: pd[1], t0: lastT, s: 0.45, rate: 1.5 });
+      if (rip.length > 10) rip.shift();
+    }
+
+    function updateOrigin() {
+      if (avatarEl) {
+        var r = avatarEl.getBoundingClientRect();
+        if (r.width) {
+          var pt = toDev(r.left + r.width / 2, r.top + r.height / 2);
+          origin.x = pt[0];
+          origin.y = pt[1];
+          return;
+        }
+      }
+      origin.x = W / 2;
+      origin.y = H / 2;
+    }
+
+    function burst() {
+      if (reduceMotion) return;
+      rip.push({ x: origin.x, y: origin.y, t0: lastT, s: 1, rate: 1 });
+      if (rip.length > 10) rip.shift();
+      if (fluid) {
+        // radial impulse: the wave also stirs the liquid outward
+        var ux = origin.x / W, uy = origin.y / H;
+        for (var i = 0; i < 10; i++) {
+          var a = (i / 10) * Math.PI * 2;
+          var dx = Math.cos(a), dy = Math.sin(a);
+          fluid.queue.push({
+            x: ux + dx * 0.03, y: uy + dy * 0.03,
+            vx: dx * 0.8, vy: dy * 0.8, r: 0.0022
+          });
+        }
+      }
+      if (avatarEl) {
+        avatarEl.classList.remove("is-pulsing");
+        void avatarEl.offsetWidth;   // reflow so the ring animation re-triggers
+        avatarEl.classList.add("is-pulsing");
+      }
+    }
+
+    var ripData = new Float32Array(40);
+    function drawGL(t, isStatic, dt) {
+      lastT = t;
+      press += (pressTarget - press) * 0.10;
+      if (fluid && !isStatic && dt > 0) fluid.step(Math.min(dt, 1 / 30));
+      for (var i = 0; i < 10; i++) {
+        var r = rip[i];
+        var age = r ? (t - r.t0) * r.rate : -1;
+        if (r && age >= 0 && age <= 1.8) {
+          ripData[i * 4] = r.x;
+          ripData[i * 4 + 1] = r.y;
+          ripData[i * 4 + 2] = age;
+          ripData[i * 4 + 3] = r.s;
+        } else {
+          ripData[i * 4 + 2] = -1;
+        }
+      }
+      gl.useProgram(prog);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, noiseTex);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, fluid ? fluid.flowTex() : zeroTex);
+      gl.viewport(0, 0, W, H);
+      gl.uniform2f(uni.uRes, W, H);
+      gl.uniform1f(uni.uTime, t);
+      gl.uniform1f(uni.uStatic, isStatic ? 1 : 0);
+      gl.uniform2f(uni.uOrigin, origin.x, origin.y);
+      gl.uniform1f(uni.uPress, press);
+      if (fluid) {
+        var fs = fluid.flowSize();
+        gl.uniform2f(uni.uFlowSize, fs[0], fs[1]);
+      } else {
+        gl.uniform2f(uni.uFlowSize, 1, 1);
+      }
+      gl.uniform4fv(uni.uRip, ripData);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    /* ---- boot: pick the path ---- */
+    if (!gl || !initGL()) {
+      gl = null;
+      var deb2 = null;
+      window.addEventListener("resize", function () {
+        clearTimeout(deb2);
+        deb2 = setTimeout(function () { sizeCanvas(); render2d(); }, 180);
+      }, { passive: true });
+      sizeCanvas();
+      render2d();
+      return;
+    }
+
+    sizeCanvas();
+    if (!reduceMotion) fluid = initFluid();
+
+    var raf = null, start = 0, prevNow = 0;
+    function frame(now) {
+      if (!start) { start = now; prevNow = now; }
+      var dt = (now - prevNow) * 0.001;
+      prevNow = now;
+      drawGL((now - start) * 0.001, false, dt);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function resize() {
+      sizeCanvas();
+      updateOrigin();
+      if (fluid) fluid.realloc();
+      if (reduceMotion) drawGL(1.2, true, 0);
+    }
+
+    function ensureRunning() {
+      if (document.hidden) return;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      resize();
+      if (reduceMotion) { drawGL(1.2, true, 0); return; }
+      start = 0;
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* the pointer stirs the liquid (fluid) / seeds ripples (fallback) */
     function onMouseMove(e) {
-      // Ignore synthetic mouse events fired right after a touch (mobile ghost events)
-      if (Date.now() - touchTime < 700) return;
-      targetMX = e.clientX;
-      targetMY = e.clientY;
-      warpTarget = overAvatar ? 0 : 1;   // over the photo the well takes over
+      if (Date.now() - touchTime < 700) return;   // ghost mouse after touch
+      if (fluid) pushForce(e.clientX, e.clientY);
+      else spawnTrail(e.clientX, e.clientY);
     }
     // Touch equivalent of :hover — fill the button under the finger
     function highlightButtonAt(x, y) {
@@ -355,295 +1056,59 @@
       touchTime = Date.now();
       var t = e.touches && e.touches[0];
       if (!t) return;
-      targetMX = t.clientX; targetMY = t.clientY;
-      warpTarget = 1;   // intensity eases in from 0, right at the finger (no fly-in, no pop)
+      pmx = -1e5; pmy = -1e5;
+      lastSX = -1e5; lastSY = -1e5;
+      if (fluid) pushForce(t.clientX, t.clientY);
+      else spawnTrail(t.clientX, t.clientY);
       highlightButtonAt(t.clientX, t.clientY);
     }
     function onTouchMove(e) {
       touchTime = Date.now();
       var t = e.touches && e.touches[0];
       if (!t) return;
-      targetMX = t.clientX; targetMY = t.clientY;
-      warpTarget = 1;
+      if (fluid) pushForce(t.clientX, t.clientY);
+      else spawnTrail(t.clientX, t.clientY);
       highlightButtonAt(t.clientX, t.clientY);
     }
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    // Fade the warp out when the pointer leaves the viewport or the window loses focus
-    document.documentElement.addEventListener("mouseleave", function () { warpTarget = 0; wellTarget = 0; overAvatar = false; });
-    window.addEventListener("blur", function () { warpTarget = 0; wellTarget = 0; overAvatar = false; });
-    // On touch release, ease the warp out in place (don't snap it away)
     function clearTouch() {
       touchTime = Date.now();
-      warpTarget = 0;
+      pmx = -1e5; pmy = -1e5;
       for (var b = 0; b < buttons.length; b++) buttons[b].classList.remove("is-active");
     }
-    window.addEventListener("touchend", clearTouch, { passive: true });
-    window.addEventListener("touchcancel", clearTouch, { passive: true });
 
-    // Anchor the grid origin to the photo centre (fallback: viewport centre)
-    function updateOrigin() {
-      if (avatarEl) {
-        var r = avatarEl.getBoundingClientRect();
-        if (r.width) {
-          originX = r.left + r.width / 2;
-          originY = r.top + r.height / 2;
-          return;
-        }
-      }
-      originX = W / 2;
-      originY = H / 2;
+    if (!reduceMotion) {
+      window.addEventListener("mousemove", onMouseMove, { passive: true });
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("touchend", clearTouch, { passive: true });
+      window.addEventListener("touchcancel", clearTouch, { passive: true });
+      document.documentElement.addEventListener("mouseleave", function () {
+        pressTarget = 0;
+        pmx = -1e5; pmy = -1e5;
+      });
+      window.addEventListener("blur", function () {
+        pressTarget = 0;
+        pmx = -1e5; pmy = -1e5;
+      });
     }
 
-    function resize() {
-      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      isMobile = window.innerWidth < 720;
-      spacing = isMobile ? 70 : 74;
-      baseAmp = isMobile ? 16 : 22;
-      cameraAngle = isMobile ? Math.PI / 4 : Math.PI / 3.2;  // smaller angle = more inclined on mobile
-      cosA = Math.cos(cameraAngle);
-      sinA = Math.sin(cameraAngle);
-      W = window.innerWidth;
-      H = window.innerHeight;
-      canvas.width = Math.floor(W * DPR);
-      canvas.height = Math.floor(H * DPR);
-      canvas.style.width = W + "px";
-      canvas.style.height = H + "px";
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-      updateOrigin();
-      buildGrid();
-      if (reduceMotion) renderStatic();
-    }
-
-    function buildGrid() {
-      var margin = 14;
-      cols = Math.ceil(W / spacing) + margin;
-      rows = Math.ceil(H / spacing) + margin + 8;   // extra rows for depth
-      points = [];
-      for (var i = 0; i <= cols; i++) {
-        points[i] = [];
-        for (var j = 0; j <= rows; j++) {
-          points[i][j] = {
-            x: (i - cols / 2) * spacing,
-            z: (j - rows / 2) * spacing,
-            y: 0, sx: 0, sy: 0, scale: 1, depth: 0, lift: 0
-          };
-        }
-      }
-    }
-
-    // Perspective projection: scale = perspective / (perspective + depth)
-    function project(p) {
-      var yRot = p.y * cosA - p.z * sinA;
-      var zRot = p.y * sinA + p.z * cosA;
-      var scale = perspective / (perspective + zRot + cameraHeight);
-      p.sx = originX + p.x * scale;
-      p.sy = originY + yRot * scale;
-      p.scale = scale;
-      p.depth = zRot;
-    }
-
-    // Multi-octave (layered sine) height field — organic motion
-    function heightAt(dist, x, z, t) {
-      var h = Math.sin(dist / waveLength - t) * baseAmp;          // original wave
-      h += Math.sin(x * 0.012 + t * 1.3) * baseAmp * 0.45;
-      h += Math.cos(z * 0.010 - t * 0.9) * baseAmp * 0.35;
-      h += Math.sin((x + z) * 0.006 + t * 0.6) * baseAmp * 0.25;
-      return h;
-    }
-
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function fog(depth) { return Math.max(0, 1 - Math.abs(depth) / maxDepth); }
-
-    // Flat wireframe edge — one tone, fog-faded, no additive glow
-    function drawEdge(a, b) {
-      var depth = (a.depth + b.depth) * 0.5;
-      if (depth > maxDepth) return;
-      var f = fog(depth);
-      if (f <= 0.01) return;
-      var lift = a.lift > b.lift ? a.lift : b.lift;
-      var alpha = f * (0.08 + lift * 0.5);
-      ctx.strokeStyle = "rgba(" + LINE[0] + "," + LINE[1] + "," + LINE[2] + "," + alpha + ")";
-      ctx.beginPath();
-      ctx.moveTo(a.sx, a.sy);
-      ctx.lineTo(b.sx, b.sy);
-      ctx.stroke();
-    }
-
-    // Flat node — a small solid dot, no glowing core
-    function drawNode(p) {
-      if (p.depth > maxDepth) return;
-      var f = fog(p.depth);
-      if (f <= 0.02) return;
-      var r = 0.8 + p.scale * 1.1 + p.lift * 1.4;
-      var a = f * (0.14 + p.lift * 0.5);
-      ctx.fillStyle = "rgba(" + LINE[0] + "," + LINE[1] + "," + LINE[2] + "," + a + ")";
-      ctx.beginPath();
-      ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // ---- Gravity well: the photo presses into the mesh while hovered ----
-    var WELL_AMP = 140;      // depth of the dent at full press (world units)
-    var WELL_RADIUS = 300;   // screen-space radius around the photo centre
-    var wellAmt = 0, wellTarget = 0;
-    var overAvatar = false;
-
-    // ---- Explosion shockwave (fired when the photo is released) ----
-    var EXP_DUR = 1.8;       // seconds the wave lives
-    var EXP_SPEED = 950;     // world units/sec the wavefront travels outward
-    var EXP_SIGMA = 190;     // ring thickness
-    var EXP_TWOSIG = 2 * EXP_SIGMA * EXP_SIGMA;
-    var EXP_AMP = 150;       // peak lift toward viewer at the wavefront
-    var explosions = [];
-    var lastT = 0;
-
-    var start = 0;
-
-    function renderScene(t) {
-      warpAmt += (warpTarget - warpAmt) * 0.10;   // ease the warp intensity in/out
-      wellAmt += (wellTarget - wellAmt) * 0.09;   // press in / spring back
-      var wellActive = wellAmt > 0.004;
-      if (warpAmt < 0.01) {
-        mouseX = targetMX; mouseY = targetMY;       // idle: park position at the pointer so the next ease-in starts there
-      } else {
-        mouseX = lerp(mouseX, targetMX, 0.3);       // tight follow (small smoothing, no laggy trail)
-        mouseY = lerp(mouseY, targetMY, 0.3);
-      }
-      var mouseActive = warpAmt > 0.004;
-
-      lastT = t;
-      if (explosions.length) {
-        var alive = [];
-        for (var ei = 0; ei < explosions.length; ei++) {
-          if (t - explosions[ei].t0 <= EXP_DUR) alive.push(explosions[ei]);
-        }
-        explosions = alive;
-      }
-
-      ctx.clearRect(0, 0, W, H);
-      ctx.lineWidth = 1;
-      // flat rendering: default source-over compositing (no additive "lighter")
-
-      var i, j, p;
-
-      // Heights
-      for (i = 0; i <= cols; i++) {
-        for (j = 0; j <= rows; j++) {
-          p = points[i][j];
-          var dist = Math.sqrt(p.x * p.x + p.z * p.z);
-          p.y = heightAt(dist, p.x, p.z, t);
-          p.lift = 0;
-          for (var ex = 0; ex < explosions.length; ex++) {
-            var age = t - explosions[ex].t0;
-            if (age < 0 || age > EXP_DUR) continue;
-            var dd = dist - age * EXP_SPEED;
-            var ring = Math.exp(-(dd * dd) / EXP_TWOSIG);
-            var env = 1 - age / EXP_DUR;
-            p.y -= ring * EXP_AMP * env;
-            if (ring * env > p.lift) p.lift = ring * env;
-          }
-        }
-      }
-      // Project (need screen pos to measure mouse / photo distance)
-      for (i = 0; i <= cols; i++) {
-        for (j = 0; j <= rows; j++) project(points[i][j]);
-      }
-      // Gravity well: press the surface away around the photo. Uses
-      // screen-space distance (like the mouse warp) so the dent stays
-      // centred on the photo despite the camera tilt.
-      if (wellActive) {
-        for (i = 0; i <= cols; i++) {
-          for (j = 0; j <= rows; j++) {
-            p = points[i][j];
-            var wdx = p.sx - originX, wdy = p.sy - originY;
-            var wd = Math.sqrt(wdx * wdx + wdy * wdy);
-            if (wd < WELL_RADIUS) {
-              var winf = 1 - wd / WELL_RADIUS;
-              var we = winf * winf * wellAmt;
-              p.y += we * WELL_AMP;              // dent away from the viewer
-              if (we * 0.35 > p.lift) p.lift = we * 0.35;  // brighten the funnel walls
-            }
-          }
-        }
-      }
-      // Mouse warp: lift surface toward viewer near the cursor
-      if (mouseActive) {
-        for (i = 0; i <= cols; i++) {
-          for (j = 0; j <= rows; j++) {
-            p = points[i][j];
-            var dx = p.sx - mouseX, dy = p.sy - mouseY;
-            var d = Math.sqrt(dx * dx + dy * dy);
-            if (d < mouseRadius) {
-              var inf = 1 - d / mouseRadius;
-              var e = inf * inf * warpAmt;
-              if (e > p.lift) p.lift = e;
-              p.y -= e * baseAmp * 2.4;
-            }
-          }
-        }
-      }
-      // Re-project everything the well / warp displaced
-      if (wellActive || mouseActive) {
-        for (i = 0; i <= cols; i++) {
-          for (j = 0; j <= rows; j++) {
-            if (points[i][j].lift > 0) project(points[i][j]);
-          }
-        }
-      }
-
-      // Wireframe edges (depth fog)
-      for (i = 0; i <= cols; i++) {
-        for (j = 0; j <= rows; j++) {
-          p = points[i][j];
-          if (i < cols) drawEdge(p, points[i + 1][j]);
-          if (j < rows) drawEdge(p, points[i][j + 1]);
-        }
-      }
-
-      // Flat nodes — a dot on every grid corner
-      var step = 1;
-      for (i = 0; i <= cols; i += step) {
-        for (j = 0; j <= rows; j += step) {
-          drawNode(points[i][j]);
-        }
-      }
-    }
-
-    var raf = null;
-    function frame(now) {
-      if (!start) start = now;
-      var t = (now - start) * 0.001;
-      renderScene(t);
-      raf = requestAnimationFrame(frame);
-    }
-
-    function renderStatic() {
-      // calm single frame, fixed phase, no mouse warp
-      start = 0;
-      renderScene(1.2);
+    /* press -> release -> ripple on the photo */
+    if (avatarEl) {
+      avatarEl.addEventListener("mouseenter", function () {
+        if (Date.now() - touchTime < 700) return;
+        if (!reduceMotion) pressTarget = 1;
+      });
+      avatarEl.addEventListener("mouseleave", function () {
+        if (Date.now() - touchTime < 700) return;
+        pressTarget = 0;
+        burst();
+      });
+      // No sustained hover on touch — a tap is press + release in one
+      avatarEl.addEventListener("touchstart", burst, { passive: true });
     }
 
     window.addEventListener("resize", resize, { passive: true });
-
-    // Recompute the photo-anchored origin once fonts/layout settle
-    window.addEventListener("load", function () {
-      updateOrigin();
-      if (reduceMotion) renderStatic();
-    });
-
-    // Recover after the tab was backgrounded: the mobile browser can drop or
-    // corrupt the canvas / leave stale dimensions, freezing a broken frame.
-    // Rebuild at the current size and restart a clean loop on every return path.
-    function ensureRunning() {
-      if (document.hidden) return;
-      if (raf) { cancelAnimationFrame(raf); raf = null; }
-      resize();
-      if (reduceMotion) { renderStatic(); return; }
-      start = 0;
-      raf = requestAnimationFrame(frame);
-    }
+    window.addEventListener("load", updateOrigin);
 
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) {
@@ -654,7 +1119,16 @@
     });
     window.addEventListener("pageshow", ensureRunning);
     window.addEventListener("focus", ensureRunning);
-    canvas.addEventListener("contextrestored", ensureRunning);
+    cv.addEventListener("webglcontextlost", function (e) {
+      e.preventDefault();
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+    });
+    cv.addEventListener("webglcontextrestored", function () {
+      if (initGL()) {
+        if (!reduceMotion) fluid = initFluid();
+        ensureRunning();
+      }
+    });
 
     // React to motion-preference changes live
     if (window.matchMedia) {
@@ -663,8 +1137,10 @@
         reduceMotion = mq.matches;
         if (reduceMotion) {
           if (raf) { cancelAnimationFrame(raf); raf = null; }
-          renderStatic();
+          press = 0; pressTarget = 0; rip = [];
+          drawGL(1.2, true, 0);
         } else if (!raf) {
+          if (!fluid) fluid = initFluid();
           start = 0;
           raf = requestAnimationFrame(frame);
         }
@@ -673,36 +1149,10 @@
       else if (mq.addListener) mq.addListener(onMq);
     }
 
-    // Press → release → ripple: hovering the photo dents the mesh (gravity
-    // well); releasing lets the fabric spring back and fires the shockwave.
-    if (avatarEl) {
-      var burst = function () {
-        if (reduceMotion) return;
-        if (explosions.length < 5) explosions.push({ t0: lastT });
-        // Restart the sonar rings in sync with the mesh shockwave
-        avatarEl.classList.remove("is-pulsing");
-        void avatarEl.offsetWidth;   // reflow so the animation re-triggers
-        avatarEl.classList.add("is-pulsing");
-      };
-      avatarEl.addEventListener("mouseenter", function () {
-        if (Date.now() - touchTime < 700) return;   // ignore ghost hover after touch
-        overAvatar = true;
-        if (!reduceMotion) { wellTarget = 1; warpTarget = 0; }
-      });
-      avatarEl.addEventListener("mouseleave", function () {
-        if (Date.now() - touchTime < 700) return;
-        overAvatar = false;
-        wellTarget = 0;
-        burst();
-      });
-      // No sustained hover on touch — a tap is press + release in one
-      avatarEl.addEventListener("touchstart", burst, { passive: true });
-    }
-
     // Boot
     resize();
     if (reduceMotion) {
-      renderStatic();
+      drawGL(1.2, true, 0);
     } else {
       raf = requestAnimationFrame(frame);
     }
