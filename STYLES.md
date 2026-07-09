@@ -17,6 +17,22 @@ Três famílias, papéis fixos (carregadas via Google Fonts):
 Pesos carregados: Sora 600/700/800 · Inter 400/500/600 · IBM Plex Mono 400/500.
 Sempre use `font-family: var(--font-…)` — nunca o nome da fonte direto.
 
+**Identidade da marca (lockup da home):** par permanente
+**Anzeigen Grotesk** (nome em caps condensadas; peso único, nunca
+sintetizar negrito) + **Corporate A** (tagline; peso 300 no CSS — usa
+Light/Light Italic quando disponíveis no kit). Servidas pelo Adobe Fonts
+(web project `qjf5rzi` em `use.typekit.net`, atrelado à assinatura
+Creative Cloud) e carregadas só na home. Fallbacks livres na pilha:
+**Anton** e **Instrument Serif** (Google Fonts, reta + itálica) — se o
+kit cair, o lockup degrada para eles sem quebrar. Arranjo: nome em uma
+linha; tagline colada abaixo em três vozes — "creative mind" reto em
+`--paper` cheio (a voz mais visível), bullet em `.45`, "building things
+for" itálico em `rgba(var(--paper-rgb), .75)` e só "fun" em areia
+`#ffc37a` (único acento de cor, vindo da rampa do fundo). Uso exclusivo
+da identidade (nome/subtítulo,
+reels); não usar em UI. A serifa de corpo dos posts do blog é uma escolha
+separada (a Corporate A também tem pesos de texto e é candidata natural).
+
 ## Cores
 
 | Token         | Valor                       | Uso                                   |

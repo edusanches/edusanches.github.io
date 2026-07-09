@@ -17,7 +17,12 @@
   <!-- Google Fonts: Sora (display) · Inter (body) · IBM Plex Mono (utility) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Anton&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <!-- Adobe Fonts (brand lockup): Anzeigen Grotesk + Corporate A italic.
+       Tied to the Creative Cloud subscription — Anton/Instrument (above) stay
+       as free fallbacks, so the lockup degrades gracefully if the kit dies. -->
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+  <link rel="stylesheet" href="https://use.typekit.net/qjf5rzi.css" />
 
   <style>
     :root {
@@ -67,17 +72,13 @@
       font-family: var(--font-body);
       color: var(--paper);
       text-align: center;
-      /* Warm/teal tonal field: eclipse blobs with hot rims over a teal
-         channel, oranges in the corners — the mesh draws on top of this */
-      background-color: #d94e1c;
+      /* No-JS fallback: warm eclipse faces and dark inner rims frame the
+         same petrol-teal channel drawn by the canvas. */
+      background-color: #132d31;
       background:
-        radial-gradient(52% 55% at 78% 6%, #140a0f 0%, #140a0f 26%, #4a1013 38%, #d13b16 47%, #ff8c30 53%, rgba(255, 140, 48, 0) 60%),
-        radial-gradient(55% 60% at 18% 102%, #150a0e 0%, #150a0e 24%, #4d1013 37%, #d43d15 46%, #ff9134 52%, rgba(255, 145, 52, 0) 59%),
-        radial-gradient(58% 42% at 2% 2%, #ecad5f 0%, rgba(236, 173, 95, 0) 50%),
-        radial-gradient(52% 42% at 100% 100%, #f0a04e 0%, rgba(240, 160, 78, 0) 48%),
-        radial-gradient(75% 44% at 30% 40%, #1e5058 0%, #1e5058 38%, rgba(30, 80, 88, 0) 58%),
-        radial-gradient(80% 46% at 74% 70%, #1b4b53 0%, #1b4b53 40%, rgba(27, 75, 83, 0) 60%),
-        linear-gradient(160deg, #dd8a38 0%, #d94e1c 45%, #e0812f 100%);
+        radial-gradient(ellipse 122% 105% at -32% -34%, #6a604e 30%, #887759 38%, #c48c54 46%, #ea9543 54%, #ec8a40 60%, #ed6a30 66%, #ec361f 72%, #d81920 76%, #901a22 80%, #43171e 84%, #201218 88%, #251318 90%, #7e1a20 92%, #d12f22 93%, #e5642f 94%, #e98540 95%, #d58c4c 96%, rgba(123, 114, 87, 0.86) 98%, rgba(51, 84, 82, 0.66) 100%, rgba(25, 65, 69, 0.22) 102%, transparent 104%),
+        radial-gradient(ellipse 122% 105% at 132% 134%, #6a604e 30%, #887759 38%, #c48c54 46%, #ea9543 54%, #ec8a40 60%, #ed6a30 66%, #ec361f 72%, #d81920 76%, #901a22 80%, #43171e 84%, #201218 88%, #251318 90%, #7e1a20 92%, #d12f22 93%, #e5642f 94%, #e98540 95%, #d58c4c 96%, rgba(123, 114, 87, 0.86) 98%, rgba(51, 84, 82, 0.66) 100%, rgba(25, 65, 69, 0.22) 102%, transparent 104%),
+        linear-gradient(145deg, #183b3f 0%, #10272b 50%, #17383c 100%);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       overflow: hidden;
@@ -87,19 +88,14 @@
       justify-content: center;
       padding: 44px 20px;
     }
-    /* Portrait: re-aim the field so the teal reads as a diagonal channel
-       between the two eclipse blobs (same palette, different geometry) */
+    /* Portrait follows the reference more literally: opposite arcs leave a
+       sinuous teal channel between them. */
     @media (orientation: portrait) {
       body {
         background:
-          radial-gradient(80% 38% at 82% 10%, #140a0f 0%, #140a0f 22%, #4a1013 36%, #d13b16 46%, #ff8c30 52%, rgba(255, 140, 48, 0) 60%),
-          radial-gradient(85% 40% at 30% 98%, #150a0e 0%, #150a0e 20%, #4d1013 34%, #d43d15 44%, #ff9134 51%, rgba(255, 145, 52, 0) 59%),
-          radial-gradient(70% 30% at 0% 0%, #ecad5f 0%, rgba(236, 173, 95, 0) 55%),
-          radial-gradient(65% 28% at 100% 100%, #f0a04e 0%, rgba(240, 160, 78, 0) 52%),
-          radial-gradient(75% 26% at 16% 42%, #1e5058 0%, #1e5058 36%, rgba(30, 80, 88, 0) 58%),
-          radial-gradient(80% 28% at 84% 62%, #1b4b53 0%, #1b4b53 38%, rgba(27, 75, 83, 0) 60%),
-          radial-gradient(60% 22% at 50% 52%, #1d4f57 0%, #1d4f57 34%, rgba(29, 79, 87, 0) 60%),
-          linear-gradient(170deg, #dd8a38 0%, #d94e1c 45%, #e0812f 100%);
+          radial-gradient(ellipse 142.3% 85.4% at -27.6% -27.9%, #6a604e 30%, #887759 38%, #c48c54 46%, #ea9543 54%, #ec8a40 60%, #ed6a30 66%, #ec361f 72%, #d81920 76%, #901a22 80%, #43171e 84%, #201218 88%, #251318 90%, #7e1a20 92%, #d12f22 93%, #e5642f 94%, #e98540 95%, #d58c4c 96%, rgba(123, 114, 87, 0.86) 98%, rgba(51, 84, 82, 0.66) 100%, rgba(25, 65, 69, 0.22) 102%, transparent 104%),
+          radial-gradient(ellipse 142.3% 85.4% at 127.6% 127.9%, #6a604e 30%, #887759 38%, #c48c54 46%, #ea9543 54%, #ec8a40 60%, #ed6a30 66%, #ec361f 72%, #d81920 76%, #901a22 80%, #43171e 84%, #201218 88%, #251318 90%, #7e1a20 92%, #d12f22 93%, #e5642f 94%, #e98540 95%, #d58c4c 96%, rgba(123, 114, 87, 0.86) 98%, rgba(51, 84, 82, 0.66) 100%, rgba(25, 65, 69, 0.22) 102%, transparent 104%),
+          linear-gradient(150deg, #183b3f 0%, #10272b 50%, #17383c 100%);
       }
     }
 
@@ -189,24 +185,35 @@
       }
     }
 
+    /* Brand lockup (identity pair: Anzeigen Grotesk + Corporate A italic,
+       falling back to their free lookalikes Anton + Instrument Serif):
+       name in condensed caps on one line, italic tagline right under it */
     h1 {
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: clamp(30px, 7.5vw, 40px);
-      line-height: 1.05;
-      letter-spacing: -0.022em;
+      font-family: 'anzeigen-grotesk', 'Anton', var(--font-display);
+      font-weight: 400;                 /* single-weight faces — never synthesize */
+      font-synthesis: none;
+      font-size: clamp(34px, 10.5vw, 62px);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
       color: var(--paper);
-      margin: 0 0 10px;
+      margin: 0;
       text-shadow: 0 1px 30px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
     }
-
     .tagline {
-      font-size: 14px;
-      color: var(--soft);
-      margin: 0 0 34px;
+      font-family: 'corporate-a', 'Instrument Serif', serif;
+      font-style: italic;
+      font-weight: 300;   /* resolves to Light Italic once it's in the kit; 400 until then */
+      font-size: clamp(16px, 4vw, 21px);
+      color: rgba(var(--paper-rgb), 0.75);
+      margin: 0.08em 0 34px;
       text-shadow: 0 1px 16px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.85);
     }
-    .tagline b { color: var(--paper); font-weight: 600; }
+    /* Tagline voices: "creative mind" upright and brightest, the rest
+       italic stepped back, "fun" as the single colour accent (the ramp's sand) */
+    .tagline-quiet { font-style: normal; color: var(--paper); }
+    .tagline-dot { color: rgba(var(--paper-rgb), 0.45); }
+    .tagline-accent { color: #ffc37a; }
 
     /* Flat buttons — no glass, no blur, no shadow, no depth */
     .links {
@@ -295,7 +302,7 @@
     </span>
 
     <h1>eduardo sanches</h1>
-    <p class="tagline">creative dev &middot; <b>building things for the web</b></p>
+    <p class="tagline"><span class="tagline-quiet">creative mind</span> <span class="tagline-dot">&bull;</span> building things for <span class="tagline-accent">fun</span></p>
 
     <nav class="links" aria-label="Social links">
       <a class="social-button" href="https://x.com/oeduardosanches" target="_blank" rel="noopener noreferrer">X</a>
@@ -307,9 +314,9 @@
 
   <script>
   // Liquid tonal field.
-  // Display: one scalar field (gaussian blobs/wells + domain warp + colour
-  // ramp + grain) rendered by a fragment shader. The photo press/ripple and
-  // the slow autonomous drift live here.
+  // Display: two cropped elliptic-distance fields + a sampled radial colour
+  // profile, light domain warp and film grain rendered by a fragment shader.
+  // The photo press/ripple and the slow autonomous drift live here.
   // Fluid: when WebGL2 + float buffers are available, a real Navier-Stokes
   // simulation (velocity advection + pressure projection on a small grid)
   // warps the field's sampling coordinates — the mouse genuinely stirs the
@@ -353,30 +360,35 @@
 
     /* ================= static 2D fallback ================= */
 
+    var R_MIN = 0.30, R_MAX = 1.12;
     var STOPS = [
-      [0.00, 18, 63, 73], [0.30, 29, 81, 90], [0.52, 230, 167, 92],
-      [0.62, 234, 127, 46], [0.70, 255, 150, 52], [0.78, 212, 59, 22],
-      [0.88, 74, 16, 19], [1.00, 18, 10, 14]
+      [0.30, 106, 96, 78], [0.38, 136, 119, 89], [0.46, 196, 140, 84],
+      [0.54, 234, 149, 67], [0.60, 236, 138, 64], [0.66, 237, 106, 48],
+      [0.72, 236, 54, 31], [0.76, 216, 25, 32], [0.80, 144, 26, 34],
+      [0.84, 67, 23, 30], [0.88, 32, 18, 24], [0.90, 37, 19, 24],
+      [0.92, 126, 26, 32], [0.93, 209, 47, 34], [0.94, 229, 100, 47],
+      [0.95, 233, 133, 64], [0.96, 213, 140, 76], [0.98, 123, 114, 87],
+      [1.00, 51, 84, 82], [1.02, 25, 65, 69], [1.05, 18, 47, 51],
+      [1.08, 19, 38, 42], [1.12, 21, 44, 48]
     ];
 
-    function blobsFor(portrait) {
-      return portrait ? [
-        { x: 0.82, y: 0.08, sx: 0.42, sy: 0.24, a: 0.62 },
-        { x: 0.22, y: 0.98, sx: 0.45, sy: 0.26, a: 0.62 },
-        { x: 0.12, y: 0.40, sx: 0.34, sy: 0.16, a: -0.60 },
-        { x: 0.55, y: 0.52, sx: 0.30, sy: 0.15, a: -0.55 },
-        { x: 0.92, y: 0.62, sx: 0.34, sy: 0.16, a: -0.60 },
-        { x: 0.02, y: 0.02, sx: 0.30, sy: 0.18, a: 0.10 },
-        { x: 0.98, y: 0.98, sx: 0.30, sy: 0.18, a: 0.10 }
-      ] : [
-        { x: 0.78, y: 0.04, sx: 0.26, sy: 0.34, a: 0.62 },
-        { x: 0.16, y: 1.00, sx: 0.28, sy: 0.38, a: 0.62 },
-        { x: 0.24, y: 0.42, sx: 0.26, sy: 0.22, a: -0.60 },
-        { x: 0.58, y: 0.56, sx: 0.24, sy: 0.20, a: -0.52 },
-        { x: 0.90, y: 0.66, sx: 0.28, sy: 0.22, a: -0.60 },
-        { x: 0.02, y: 0.02, sx: 0.24, sy: 0.26, a: 0.10 },
-        { x: 0.99, y: 0.98, sx: 0.24, sy: 0.26, a: 0.10 }
-      ];
+    function ellipseRadius(u, v, cx, cy, sx, sy) {
+      var dx = (u - cx) / sx, dy = (v - cy) / sy;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /* The reference is two huge cropped ellipses, not two closed rings.
+       Their shared radial profile runs warm -> red -> dark -> hot rim -> teal. */
+    function radiusField(u, v, portrait) {
+      var a, b;
+      if (portrait) {
+        a = ellipseRadius(u, v, -0.276, -0.279, 1.423, 0.854);
+        b = ellipseRadius(u, v, 1.276, 1.279, 1.423, 0.854);
+      } else {
+        a = ellipseRadius(u, v, -0.32, -0.34, 1.22, 1.05);
+        b = ellipseRadius(u, v, 1.32, 1.34, 1.22, 1.05);
+      }
+      return Math.min(a, b);
     }
 
     function render2d() {
@@ -384,7 +396,7 @@
       if (!ctx2) return;
       var LUT = new Uint8Array(1024 * 3);
       for (var i = 0; i < 1024; i++) {
-        var t = i / 1023, s = 0;
+        var t = R_MIN + (R_MAX - R_MIN) * (i / 1023), s = 0;
         while (s < STOPS.length - 2 && t > STOPS[s + 1][0]) s++;
         var a = STOPS[s], b = STOPS[s + 1];
         var k = (t - a[0]) / (b[0] - a[0]);
@@ -394,23 +406,16 @@
         LUT[i * 3 + 2] = a[3] + (b[3] - a[3]) * k;
       }
       var STEP = 4;
-      var G = blobsFor(H > W);
+      var portrait = H > W;
       var gw = Math.ceil(W / STEP) + 2, gh = Math.ceil(H / STEP) + 2;
       var field = new Float32Array(gw * gh);
       for (var gy = 0; gy < gh; gy++) {
         var v = (gy * STEP) / H;
         for (var gx = 0; gx < gw; gx++) {
           var u = (gx * STEP) / W;
-          var wu = u + 0.045 * Math.sin(v * 4.6 + 1.2) + 0.02 * Math.sin(v * 10.3 + 3.1);
-          var wv = v + 0.055 * Math.sin(u * 3.9 + 0.6) + 0.02 * Math.sin(u * 8.3 + 5.0);
-          var f = 0.60;
-          for (var bi = 0; bi < G.length; bi++) {
-            var g = G[bi];
-            var dx = (wu - g.x) / g.sx, dy = (wv - g.y) / g.sy;
-            var q = dx * dx + dy * dy;
-            if (q < 9) f += g.a * Math.exp(-q);
-          }
-          field[gy * gw + gx] = f;
+          var wu = u + 0.010 * Math.sin(v * 4.6 + 1.2) + 0.003 * Math.sin(v * 10.3 + 3.1);
+          var wv = v + 0.012 * Math.sin(u * 3.9 + 0.6) + 0.003 * Math.sin(u * 8.3 + 5.0);
+          field[gy * gw + gx] = radiusField(wu, wv, portrait);
         }
       }
       var img = ctx2.createImageData(W, H);
@@ -426,11 +431,14 @@
           var f01 = field[r1 + x0], f11 = field[r1 + x0 + 1];
           var top = f00 + (f10 - f00) * tx;
           var bot = f01 + (f11 - f01) * tx;
-          var f = top + (bot - top) * ty;
-          var tt = f < 0 ? 0 : f > 1 ? 1 : f;
+          var radius = top + (bot - top) * ty;
+          var tt = (radius - R_MIN) / (R_MAX - R_MIN);
+          tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
           var idx = ((tt * 1023) | 0) * 3;
           seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
-          var n = ((seed & 255) / 255 - 0.5) * 26;
+          var goldGrain = 36 * Math.exp(-Math.pow((radius - 0.56) / 0.17, 2));
+          var redGrain = 10 * Math.exp(-Math.pow((radius - 0.72) / 0.10, 2));
+          var n = ((seed & 255) / 255 - 0.5) * (46 + goldGrain + redGrain);
           var rr = LUT[idx] + n, gg = LUT[idx + 1] + n, bb = LUT[idx + 2] + n;
           d[p] = rr < 0 ? 0 : rr > 255 ? 255 : rr;
           d[p + 1] = gg < 0 ? 0 : gg > 255 ? 255 : gg;
@@ -474,28 +482,53 @@
       "uniform sampler2D uFlow;",
       "uniform vec2 uFlowSize;",
       "",
-      "vec3 ramp(float t) {",
-      "  t = clamp(t, 0.0, 1.0);",
-      "  vec3 c0 = vec3(0.0706, 0.2471, 0.2863);",
-      "  vec3 c1 = vec3(0.1137, 0.3176, 0.3529);",
-      "  vec3 c2 = vec3(0.9020, 0.6549, 0.3608);",
-      "  vec3 c3 = vec3(0.9176, 0.4980, 0.1804);",
-      "  vec3 c4 = vec3(1.0000, 0.5882, 0.2039);",
-      "  vec3 c5 = vec3(0.8314, 0.2314, 0.0863);",
-      "  vec3 c6 = vec3(0.2902, 0.0627, 0.0745);",
-      "  vec3 c7 = vec3(0.0706, 0.0392, 0.0549);",
-      "  if (t < 0.30) return mix(c0, c1, t / 0.30);",
-      "  if (t < 0.52) return mix(c1, c2, (t - 0.30) / 0.22);",
-      "  if (t < 0.62) return mix(c2, c3, (t - 0.52) / 0.10);",
-      "  if (t < 0.70) return mix(c3, c4, (t - 0.62) / 0.08);",
-      "  if (t < 0.78) return mix(c4, c5, (t - 0.70) / 0.08);",
-      "  if (t < 0.88) return mix(c5, c6, (t - 0.78) / 0.10);",
-      "  return mix(c6, c7, (t - 0.88) / 0.12);",
-      "}",
-      "",
-      "float g2(vec2 w, vec2 c, vec2 s) {",
-      "  vec2 d = (w - c) / s;",
-      "  return exp(-dot(d, d));",
+      "vec3 orbRamp(float r) {",
+      "  r = clamp(r, 0.30, 1.12);",
+      "  vec3 c0  = vec3(0.4157, 0.3765, 0.3059);",
+      "  vec3 c1  = vec3(0.5333, 0.4667, 0.3490);",
+      "  vec3 c2  = vec3(0.7686, 0.5490, 0.3294);",
+      "  vec3 c3  = vec3(0.9176, 0.5843, 0.2627);",
+      "  vec3 c4  = vec3(0.9255, 0.5412, 0.2510);",
+      "  vec3 c5  = vec3(0.9294, 0.4157, 0.1882);",
+      "  vec3 c6  = vec3(0.9255, 0.2118, 0.1216);",
+      "  vec3 c7  = vec3(0.8471, 0.0980, 0.1255);",
+      "  vec3 c8  = vec3(0.5647, 0.1020, 0.1333);",
+      "  vec3 c9  = vec3(0.2627, 0.0902, 0.1176);",
+      "  vec3 c10 = vec3(0.1255, 0.0706, 0.0941);",
+      "  vec3 c11 = vec3(0.1451, 0.0745, 0.0941);",
+      "  vec3 c12 = vec3(0.4941, 0.1020, 0.1255);",
+      "  vec3 c13 = vec3(0.8196, 0.1843, 0.1333);",
+      "  vec3 c14 = vec3(0.8980, 0.3922, 0.1843);",
+      "  vec3 c15 = vec3(0.9137, 0.5216, 0.2510);",
+      "  vec3 c16 = vec3(0.8353, 0.5490, 0.2980);",
+      "  vec3 c17 = vec3(0.4824, 0.4471, 0.3412);",
+      "  vec3 c18 = vec3(0.2000, 0.3294, 0.3216);",
+      "  vec3 c19 = vec3(0.0980, 0.2549, 0.2706);",
+      "  vec3 c20 = vec3(0.0706, 0.1843, 0.2000);",
+      "  vec3 c21 = vec3(0.0745, 0.1490, 0.1647);",
+      "  vec3 c22 = vec3(0.0824, 0.1725, 0.1882);",
+      "  if (r < 0.38) return mix(c0, c1, (r - 0.30) / 0.08);",
+      "  if (r < 0.46) return mix(c1, c2, (r - 0.38) / 0.08);",
+      "  if (r < 0.54) return mix(c2, c3, (r - 0.46) / 0.08);",
+      "  if (r < 0.60) return mix(c3, c4, (r - 0.54) / 0.06);",
+      "  if (r < 0.66) return mix(c4, c5, (r - 0.60) / 0.06);",
+      "  if (r < 0.72) return mix(c5, c6, (r - 0.66) / 0.06);",
+      "  if (r < 0.76) return mix(c6, c7, (r - 0.72) / 0.04);",
+      "  if (r < 0.80) return mix(c7, c8, (r - 0.76) / 0.04);",
+      "  if (r < 0.84) return mix(c8, c9, (r - 0.80) / 0.04);",
+      "  if (r < 0.88) return mix(c9, c10, (r - 0.84) / 0.04);",
+      "  if (r < 0.90) return mix(c10, c11, (r - 0.88) / 0.02);",
+      "  if (r < 0.92) return mix(c11, c12, (r - 0.90) / 0.02);",
+      "  if (r < 0.93) return mix(c12, c13, (r - 0.92) / 0.01);",
+      "  if (r < 0.94) return mix(c13, c14, (r - 0.93) / 0.01);",
+      "  if (r < 0.95) return mix(c14, c15, (r - 0.94) / 0.01);",
+      "  if (r < 0.96) return mix(c15, c16, (r - 0.95) / 0.01);",
+      "  if (r < 0.98) return mix(c16, c17, (r - 0.96) / 0.02);",
+      "  if (r < 1.00) return mix(c17, c18, (r - 0.98) / 0.02);",
+      "  if (r < 1.02) return mix(c18, c19, (r - 1.00) / 0.02);",
+      "  if (r < 1.05) return mix(c19, c20, (r - 1.02) / 0.03);",
+      "  if (r < 1.08) return mix(c20, c21, (r - 1.05) / 0.03);",
+      "  return mix(c21, c22, (r - 1.08) / 0.04);",
       "}",
       "",
       "void main() {",
@@ -539,38 +572,33 @@
       "  vec2 q = p / uRes;",
       "  float u = q.x;",
       "  float v = 1.0 - q.y;",
-      "  float wu = u + 0.045 * sin(v * 4.6 + 1.2 + T * 0.21) + 0.02 * sin(v * 10.3 + 3.1 - T * 0.17);",
-      "  float wv = v + 0.055 * sin(u * 3.9 + 0.6 + T * 0.15) + 0.02 * sin(u * 8.3 + 5.0 + T * 0.23);",
+      "  float wu = u + 0.010 * sin(v * 4.6 + 1.2 + T * 0.21) + 0.003 * sin(v * 10.3 + 3.1 - T * 0.17);",
+      "  float wv = v + 0.012 * sin(u * 3.9 + 0.6 + T * 0.15) + 0.003 * sin(u * 8.3 + 5.0 + T * 0.23);",
       "  vec2 w = vec2(wu, wv);",
       "",
-      "  float f = 0.60 + fBump - 0.30 * dent;",
       "  vec2 dr1 = 0.013 * vec2(sin(T * 0.11), cos(T * 0.10));",
       "  vec2 dr2 = 0.015 * vec2(sin(T * 0.09 + 2.1), cos(T * 0.12 + 1.0));",
-      "  vec2 dr3 = 0.016 * vec2(sin(T * 0.10 + 4.0), cos(T * 0.08 + 0.7));",
-      "  vec2 dr4 = 0.014 * vec2(sin(T * 0.12 + 5.3), cos(T * 0.09 + 3.6));",
-      "  vec2 dr5 = 0.015 * vec2(sin(T * 0.08 + 1.6), cos(T * 0.11 + 5.1));",
+      "  /* Elliptic distance recreates the two enormous cropped masses in",
+      "     the reference. Their radial ramp contains both the dark edge and",
+      "     the narrow red/gold halo before it reaches the teal channel. */",
+      "  float rA, rB;",
       "  if (uRes.y > uRes.x) {",
-      "    f += 0.62 * g2(w, vec2(0.82, 0.08) + dr1, vec2(0.42, 0.24));",
-      "    f += 0.62 * g2(w, vec2(0.22, 0.98) + dr2, vec2(0.45, 0.26));",
-      "    f -= 0.60 * g2(w, vec2(0.12, 0.40) + dr3, vec2(0.34, 0.16));",
-      "    f -= 0.55 * g2(w, vec2(0.55, 0.52) + dr4, vec2(0.30, 0.15));",
-      "    f -= 0.60 * g2(w, vec2(0.92, 0.62) + dr5, vec2(0.34, 0.16));",
-      "    f += 0.10 * g2(w, vec2(0.02, 0.02), vec2(0.30, 0.18));",
-      "    f += 0.10 * g2(w, vec2(0.98, 0.98), vec2(0.30, 0.18));",
+      "    rA = length((w - (vec2(-0.276, -0.279) + dr1)) / vec2(1.423, 0.854));",
+      "    rB = length((w - (vec2(1.276, 1.279) + dr2)) / vec2(1.423, 0.854));",
       "  } else {",
-      "    f += 0.62 * g2(w, vec2(0.78, 0.04) + dr1, vec2(0.26, 0.34));",
-      "    f += 0.62 * g2(w, vec2(0.16, 1.00) + dr2, vec2(0.28, 0.38));",
-      "    f -= 0.60 * g2(w, vec2(0.24, 0.42) + dr3, vec2(0.26, 0.22));",
-      "    f -= 0.52 * g2(w, vec2(0.58, 0.56) + dr4, vec2(0.24, 0.20));",
-      "    f -= 0.60 * g2(w, vec2(0.90, 0.66) + dr5, vec2(0.28, 0.22));",
-      "    f += 0.10 * g2(w, vec2(0.02, 0.02), vec2(0.24, 0.26));",
-      "    f += 0.10 * g2(w, vec2(0.99, 0.98), vec2(0.24, 0.26));",
+      "    rA = length((w - (vec2(-0.32, -0.34) + dr1)) / vec2(1.22, 1.05));",
+      "    rB = length((w - (vec2(1.32, 1.34) + dr2)) / vec2(1.22, 1.05));",
       "  }",
+      "  float radius = min(rA, rB);",
       "",
-      "  vec3 col = ramp(f);",
-      "  col += fBump * 0.45;   /* light catching the wave crests */",
+      "  vec3 col = orbRamp(radius);",
+      "  col = mix(col, orbRamp(1.05), 0.52 * dent);",
+      "  col += fBump * 0.40;   /* light catching the wave crests */",
       "  float gr = texture2D(uNoise, gl_FragCoord.xy / 256.0).r;",
-      "  col += (gr - 0.5) * 0.102;",
+      "  float gx = (radius - 0.56) / 0.17;",
+      "  float rx = (radius - 0.72) / 0.10;",
+      "  float grainAmp = 0.180 + 0.141 * exp(-gx * gx) + 0.039 * exp(-rx * rx);",
+      "  col += (gr - 0.5) * grainAmp;",
       "  gl_FragColor = vec4(col, 1.0);",
       "}"
     ].join("\n");
