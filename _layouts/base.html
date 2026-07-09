@@ -43,6 +43,15 @@
       --space-6: 32px;
       --space-7: 48px;
     }
+    /* Custom cursor: modern rounded arrow (native SVG cursor — zero lag) —
+       white here (dark background); black on the home. Same block on home,
+       blog layout and editor; keep them in sync. */
+    html, body,
+    a, button, [role="button"], label, summary {
+      cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='26'%20height='26'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M4.037%204.688a.495.495%200%200%201%20.651-.651l16%206.5a.5.5%200%200%201-.063.947l-6.124%201.58a2%202%200%200%200-1.438%201.435l-1.579%206.126a.5.5%200%200%201-.947.063z'%20fill='none'%20stroke='%230a0a0b'%20stroke-width='4'%20stroke-linejoin='round'%20stroke-linecap='round'%20transform='rotate(15%2012%2012)'/%3E%3Cpath%20d='M4.037%204.688a.495.495%200%200%201%20.651-.651l16%206.5a.5.5%200%200%201-.063.947l-6.124%201.58a2%202%200%200%200-1.438%201.435l-1.579%206.126a.5.5%200%200%201-.947.063z'%20fill='%23f5f6f7'%20stroke='%23f5f6f7'%20stroke-width='1.5'%20stroke-linejoin='round'%20transform='rotate(15%2012%2012)'/%3E%3C/svg%3E") 7 3, auto;
+    }
+    input, textarea, select, [contenteditable] { cursor: text; }
+
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
     body {

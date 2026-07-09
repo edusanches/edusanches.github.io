@@ -56,6 +56,16 @@ parágrafos/headings) seguem calibrados na unha — não force a escala neles.
 
 ## Convenções
 
+- **Cursor:** todo o site usa um cursor customizado — seta "pipa" de cantos
+  arredondados, inclinada 15° (SVG inline via `cursor: url(...)`): **preta**
+  na home (fundo colorido) e **branca com contorno preto** (`#f5f6f7` /
+  `#0a0a0b`, para não sumir sobre texto claro) no blog e no editor
+  (fundo escuro). O bloco de CSS é o mesmo em `index.html`,
+  `_layouts/base.html` e `escrever/index.html`, mudando só a cor — mantenha
+  em sincronia. Campos de texto voltam ao I-beam nativo
+  (`input, textarea, select, [contenteditable]`); não usar `cursor: pointer`
+  em elementos novos (use `inherit`).
+
 - **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa um campo tonal "líquido" (WebGL; fallback estático em canvas 2D e, sem JS, gradientes CSS no `body` — os três compartilham a mesma rampa de cores).
 - **Largura de leitura:** `max-width: 680px` no blog.
 - **Foco:** `:focus-visible` com `outline: 2px solid rgba(var(--paper-rgb), .7)`.
