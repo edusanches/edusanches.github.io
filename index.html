@@ -1062,9 +1062,12 @@
     sizeCanvas();
     if (!reduceMotion) fluid = initFluid();
 
-    var raf = null, start = 0, prevNow = 0;
+    var raf = null, start = 0, prevNow = 0, resumed = false;
     function frame(now) {
       if (!start) { start = now; prevNow = now; }
+      /* after a tab switch only dt restarts — the clock t must never rewind,
+         or ripples stored with an older t0 replay out of nowhere */
+      if (resumed) { prevNow = now; resumed = false; }
       var dt = (now - prevNow) * 0.001;
       prevNow = now;
       drawGL((now - start) * 0.001, false, dt);
@@ -1083,7 +1086,8 @@
       if (raf) { cancelAnimationFrame(raf); raf = null; }
       resize();
       if (reduceMotion) { drawGL(1.2, true, 0); return; }
-      start = 0;
+      resumed = true;
+      if (fluid) fluid.queue.length = 0;   // drop stale splats queued at tab-away
       raf = requestAnimationFrame(frame);
     }
 
@@ -1143,13 +1147,19 @@
 
     /* press -> release -> ripple in the background field */
     if (avatarEl) {
+      var hoverAt = 0;
       avatarEl.addEventListener("mouseenter", function () {
         if (Date.now() - touchTime < 700) return;
+        hoverAt = Date.now();
         if (!reduceMotion) pressTarget = 1;
       });
       avatarEl.addEventListener("mouseleave", function () {
         if (Date.now() - touchTime < 700) return;
         pressTarget = 0;
+        /* the wave is the release of a felt press — fast pass-throughs on
+           the way to the buttons (or synthetic leave events on tab switch)
+           should not fire it */
+        if (Date.now() - hoverAt < 180 || document.hidden) return;
         burst();
       });
       // No sustained hover on touch — a tap is press + release in one
