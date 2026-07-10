@@ -6,32 +6,39 @@ autocontida) — **mantenha-os em sincronia**.
 
 ## Tipografia
 
-Três famílias, papéis fixos (carregadas via Google Fonts):
+Três famílias e papéis fixos. O par principal vem do Adobe Fonts, com
+fallbacks livres equivalentes no Google Fonts:
 
 | Token             | Família        | Uso                                         |
 | ----------------- | -------------- | ------------------------------------------- |
-| `--font-display`  | Sora           | títulos, nome, rótulos de botão             |
-| `--font-body`     | Inter          | texto corrido e UI                          |
-| `--font-mono`     | IBM Plex Mono  | datas, breadcrumb, código, meta             |
+| `--font-display`  | Anzeigen Grotesk / Anton | manchetes: nome, títulos de post/seção (h1/h2), título do editor |
+| `--font-body`     | Corporate A / Instrument Serif | texto corrido, subtítulos (itálico), h3 |
+| `--font-sans`     | Corporate S / system-ui | UI: botões em **700** (home e ações do editor), TOC |
+| `--font-mono`     | IBM Plex Mono  | datas, breadcrumb/topbar, back-link, toolbar, código, meta |
 
-Pesos carregados: Sora 600/700/800 · Inter 400/500/600 · IBM Plex Mono 400/500.
+Anzeigen Grotesk é usada no peso próprio 400, sem negrito sintetizado, e
+**só em corpo grande** (manchetes em caixa alta) — condensada display fica
+apertada em corpo pequeno, então nunca em botões, navegação ou rótulos.
+Corporate A: romana e itálica na leitura, subtítulos e passagens pessoais.
+Corporate S (a sans da mesma família Corporate do Weidemann, 400/700 +
+itálicas no kit) é a voz de UI: botões e navegação local. IBM Plex Mono é a
+voz funcional (wayfinding, ferramentas, metadados) e não participa da marca.
+Fallbacks: Anton e Instrument Serif via Google Fonts; a Corporate S degrada
+para a pilha de sistema (`-apple-system`/`Segoe UI`); IBM Plex Mono 400/500.
 Sempre use `font-family: var(--font-…)` — nunca o nome da fonte direto.
 
-**Identidade da marca (lockup da home):** par permanente
-**Anzeigen Grotesk** (nome em caps condensadas; peso único, nunca
-sintetizar negrito) + **Corporate A** (tagline; peso 300 no CSS — usa
-Light/Light Italic quando disponíveis no kit). Servidas pelo Adobe Fonts
-(web project `qjf5rzi` em `use.typekit.net`, atrelado à assinatura
-Creative Cloud) e carregadas só na home. Fallbacks livres na pilha:
-**Anton** e **Instrument Serif** (Google Fonts, reta + itálica) — se o
-kit cair, o lockup degrada para eles sem quebrar. Arranjo: nome em uma
-linha; tagline colada abaixo em três vozes — "creative mind" reto em
-`--paper` cheio (a voz mais visível), bullet em `.45`, "building things
-for" itálico em `rgba(var(--paper-rgb), .75)` e só "fun" em areia
-`#ffc37a` (único acento de cor, vindo da rampa do fundo). Uso exclusivo
-da identidade (nome/subtítulo,
-reels); não usar em UI. A serifa de corpo dos posts do blog é uma escolha
-separada (a Corporate A também tem pesos de texto e é candidata natural).
+**Identidade tipográfica:** Anzeigen Grotesk + Corporate A (com a Corporate S
+como apoio de UI) é o conjunto permanente do site inteiro; a divisão de
+papéis acima é a regra de aplicação.
+
+As fontes são servidas pelo Adobe Fonts (web project `qjf5rzi` em
+`use.typekit.net`, atrelado à assinatura Creative Cloud) em todas as páginas.
+Anton e Instrument Serif ficam na pilha como fallbacks para o site continuar
+coerente caso o kit não carregue.
+
+Na home, a tagline continua em três vozes: "creative mind" reto em `--paper`
+cheio, bullet em `.45`, "building things for" itálico em
+`rgba(var(--paper-rgb), .75)` e só "fun" em areia `#ffc37a`.
 
 ## Cores
 
@@ -72,15 +79,12 @@ parágrafos/headings) seguem calibrados na unha — não force a escala neles.
 
 ## Convenções
 
-- **Cursor:** todo o site usa um cursor customizado — seta "pipa" de cantos
-  arredondados, inclinada 15° (SVG inline via `cursor: url(...)`): **preta**
-  na home (fundo colorido) e **branca com contorno preto** (`#f5f6f7` /
-  `#0a0a0b`, para não sumir sobre texto claro) no blog e no editor
-  (fundo escuro). O bloco de CSS é o mesmo em `index.html`,
-  `_layouts/base.html` e `escrever/index.html`, mudando só a cor — mantenha
-  em sincronia. Campos de texto voltam ao I-beam nativo
-  (`input, textarea, select, [contenteditable]`); não usar `cursor: pointer`
-  em elementos novos (use `inherit`).
+- **Cursor:** todo o site usa o cursor compartilhado de
+  `assets/site-cursor.css` + `assets/site-cursor.js`. A seta "pipa" é branca e
+  usa `mix-blend-mode: difference`, portanto assume sempre o inverso exato da
+  cor sob ela. Campos editáveis recebem um I-beam com a mesma inversão. O
+  cursor nativo só é ocultado em ponteiros finos e continua sendo o fallback
+  se JavaScript não carregar; em touch o cursor customizado nem é criado.
 
 - **Fundo da página:** `var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat` (blog e prévia do editor). A home usa um campo tonal "líquido" (WebGL; fallback estático em canvas 2D e, sem JS, gradientes CSS no `body` — os três compartilham a mesma rampa de cores).
 - **Largura de leitura:** `max-width: 680px` no blog.

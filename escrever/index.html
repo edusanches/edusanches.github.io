@@ -5,18 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Escrever · blog</title>
-  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   <meta name="color-scheme" content="dark" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+  <link rel="stylesheet" href="https://use.typekit.net/qjf5rzi.css" />
+  <link rel="stylesheet" href="../assets/site-cursor.css" />
+  <script src="../assets/site-cursor.js" defer></script>
 
   <style>
     :root {
       /* Type */
-      --font-display: 'Sora', sans-serif;
-      --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-display: 'anzeigen-grotesk', 'Anton', sans-serif;
+      --font-body:    'corporate-a', 'Instrument Serif', Georgia, serif;
+      --font-sans:    'corporate-s', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
       --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
       /* Colour */
       --ink:       #0a0a0b;        /* page background       */
@@ -40,15 +49,6 @@
       --space-6: 32px;
       --space-7: 48px;
     }
-    /* Custom cursor: modern rounded arrow (native SVG cursor — zero lag) —
-       white here (dark background); black on the home. Same block on home,
-       blog layout and editor; keep them in sync. */
-    html, body,
-    a, button, [role="button"], label, summary {
-      cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='26'%20height='26'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M4.037%204.688a.495.495%200%200%201%20.651-.651l16%206.5a.5.5%200%200%201-.063.947l-6.124%201.58a2%202%200%200%200-1.438%201.435l-1.579%206.126a.5.5%200%200%201-.947.063z'%20fill='none'%20stroke='%230a0a0b'%20stroke-width='4'%20stroke-linejoin='round'%20stroke-linecap='round'%20transform='rotate(15%2012%2012)'/%3E%3Cpath%20d='M4.037%204.688a.495.495%200%200%201%20.651-.651l16%206.5a.5.5%200%200%201-.063.947l-6.124%201.58a2%202%200%200%200-1.438%201.435l-1.579%206.126a.5.5%200%200%201-.947.063z'%20fill='%23f5f6f7'%20stroke='%23f5f6f7'%20stroke-width='1.5'%20stroke-linejoin='round'%20transform='rotate(15%2012%2012)'/%3E%3C/svg%3E") 7 3, auto;
-    }
-    input, textarea, select, [contenteditable] { cursor: text; }
-
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
@@ -71,8 +71,10 @@
       gap: var(--space-3);
       padding: 12px 18px;
       border-bottom: 1px solid var(--line);
+      /* wayfinding is functional, not brand — mono like the blog masthead */
       font-family: var(--font-mono);
       font-size: 13px;
+      letter-spacing: 0.02em;
       color: var(--grey);
     }
     .topbar a { text-decoration: none; color: var(--grey); }
@@ -96,9 +98,12 @@
       border: none;
       color: var(--paper);
       font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 26px;
-      letter-spacing: -0.02em;
+      font-weight: 400;
+      font-synthesis: none;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: 0.015em;
+      text-transform: uppercase;
       outline: none;
     }
     #title::placeholder { color: #4a4a52; }
@@ -117,8 +122,9 @@
       border: 1px solid var(--line);
       border-radius: var(--radius-sm);
       padding: 7px 11px;
+      /* tool chips are functional — mono keeps them compact and neutral */
       font-size: 13px;
-      font-family: var(--font-body);
+      font-family: var(--font-mono);
       cursor: inherit;   /* keep the custom arrow */
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
@@ -145,9 +151,11 @@
 
     .actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
     .actions button {
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 14px;
+      font-family: var(--font-sans);   /* Corporate S Bold, matching the home buttons */
+      font-weight: 700;
+      font-synthesis: none;
+      font-size: 15px;
+      letter-spacing: 0.01em;
       border-radius: var(--radius-md);
       padding: 11px 16px;
       cursor: inherit;   /* keep the custom arrow */
@@ -159,7 +167,7 @@
     #copy { background: transparent; color: var(--soft); }
     #copy:hover { color: var(--paper); border-color: rgba(var(--paper-rgb),0.28); }
 
-    .hint { font-size: 12px; color: var(--grey); margin: 0; line-height: 1.5; }
+    .hint { font-family: var(--font-mono); font-size: 12px; color: var(--grey); margin: 0; line-height: 1.6; }
 
     /* Preview — mirrors the blog reading style */
     .pane.preview { overflow: auto; background: var(--ink) radial-gradient(120% 80% at 50% -10%, #18181b 0%, var(--ink) 58%) no-repeat; }
@@ -170,15 +178,15 @@
       color: var(--grey); margin-bottom: 18px;
     }
     .content h1.post-title {
-      font-family: var(--font-display); font-weight: 800;
-      font-size: clamp(28px, 6.5vw, 40px); line-height: 1.12; letter-spacing: -0.02em;
+      font-family: var(--font-display); font-weight: 400; font-synthesis: none;
+      font-size: clamp(38px, 8vw, 58px); line-height: 0.98; letter-spacing: 0.015em; text-transform: uppercase;
       margin: 0 0 8px;
     }
     .content .post-date { font-family: var(--font-mono); font-size: 12px; color: var(--grey); margin-bottom: 26px; }
-    .content { font-size: 17px; line-height: 1.7; color: var(--paper); }
+    .content { font-size: 19px; line-height: 1.65; color: var(--paper); }
     .content > * + * { margin-top: 1.2em; }
-    .content h2 { font-family: var(--font-display); font-weight: 700; font-size: 23px; letter-spacing: -0.01em; margin-top: 1.8em; }
-    .content h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin-top: 1.5em; }
+    .content h2 { font-family: var(--font-display); font-weight: 400; font-synthesis: none; font-size: 32px; line-height: 1.04; letter-spacing: 0.018em; text-transform: uppercase; margin-top: 1.8em; }
+    .content h3 { font-family: var(--font-body); font-style: italic; font-weight: 400; font-size: 25px; line-height: 1.2; margin-top: 1.5em; }
     .content a { color: var(--paper); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(var(--paper-rgb),0.4); }
     .content img { max-width: 100%; height: auto; border-radius: var(--radius-md); display: block; }
     .content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: var(--radius-md); display: block; }

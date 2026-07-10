@@ -1,0 +1,71 @@
+/* One cursor for the whole site. White + difference produces the exact
+   inverse of whatever colour is underneath it. */
+html.site-cursor-active,
+html.site-cursor-active body,
+html.site-cursor-active body * {
+  cursor: none !important;
+}
+
+.site-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  width: 26px;
+  height: 26px;
+  overflow: visible;
+  color: #fff;
+  visibility: hidden;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  will-change: transform;
+}
+
+.site-cursor.is-visible {
+  visibility: visible;
+}
+
+.site-cursor__arrow {
+  position: absolute;
+  top: -3px;
+  left: -7px;
+  width: 26px;
+  height: 26px;
+  display: block;
+  overflow: visible;
+}
+
+.site-cursor__ibeam {
+  position: absolute;
+  top: -11px;
+  left: -5px;
+  width: 10px;
+  height: 22px;
+  display: none;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.site-cursor__ibeam::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 4px;
+  width: 2px;
+  background: currentColor;
+}
+
+.site-cursor.is-text .site-cursor__arrow {
+  display: none;
+}
+
+.site-cursor.is-text .site-cursor__ibeam {
+  display: block;
+}
+
+@media (pointer: coarse) {
+  .site-cursor {
+    display: none;
+  }
+}

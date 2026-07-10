@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capas sociais · Eduardo Sanches</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+  <link rel="stylesheet" href="https://use.typekit.net/qjf5rzi.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: #132d31;
+    }
+
+    #banner {
+      position: relative;
+      z-index: 1;
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="banner" aria-label="Capa social de Eduardo Sanches"></canvas>
+  <textarea id="export-data" hidden aria-hidden="true"></textarea>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var search = new URLSearchParams(window.location.search);
+      var formatName = search.get("format") === "x" ? "x" : "youtube";
+      var FORMATS = {
+        youtube: {
+          width: 2560,
+          height: 1440,
+          safe: { x: 507, y: 508, width: 1546, height: 424 },
+          guideLabel: "SAFE AREA \u00b7 1546 \u00d7 424",
+          titleSize: 188,
+          titleMargin: 180,
+          taglineSize: 48,
+          taglineMargin: 220,
+          textGap: 22
+        },
+        x: {
+          width: 1500,
+          height: 500,
+          safe: { x: 250, y: 78, width: 1000, height: 344 },
+          guideLabel: "CONTENT AREA \u00b7 1000 \u00d7 344",
+          titleSize: 116,
+          titleMargin: 90,
+          taglineSize: 34,
+          taglineMargin: 130,
+          textGap: 14
+        }
+      };
+      var format = FORMATS[formatName];
+      var WIDTH = format.width;
+      var HEIGHT = format.height;
+      var SAFE = format.safe;
+      var guides = search.has("guides");
+      var canvas = document.querySelector("#banner");
+      var context = canvas.getContext("2d");
+      var R_MIN = 0.30;
+      var R_MAX = 1.12;
+      var STOPS = [
+        [0.30, 106, 96, 78], [0.38, 136, 119, 89], [0.46, 196, 140, 84],
+        [0.54, 234, 149, 67], [0.60, 236, 138, 64], [0.66, 237, 106, 48],
+        [0.72, 236, 54, 31], [0.76, 216, 25, 32], [0.80, 144, 26, 34],
+        [0.84, 67, 23, 30], [0.88, 32, 18, 24], [0.90, 37, 19, 24],
+        [0.92, 126, 26, 32], [0.93, 209, 47, 34], [0.94, 229, 100, 47],
+        [0.95, 233, 133, 64], [0.96, 213, 140, 76], [0.98, 123, 114, 87],
+        [1.00, 51, 84, 82], [1.02, 25, 65, 69], [1.05, 18, 47, 51],
+        [1.08, 19, 38, 42], [1.12, 21, 44, 48]
+      ];
+
+      document.documentElement.style.width = WIDTH + "px";
+      document.documentElement.style.height = HEIGHT + "px";
+      document.body.style.width = WIDTH + "px";
+      document.body.style.height = HEIGHT + "px";
+      canvas.width = WIDTH;
+      canvas.height = HEIGHT;
+      canvas.style.width = WIDTH + "px";
+      canvas.style.height = HEIGHT + "px";
+      canvas.setAttribute("aria-label", formatName === "x" ? "Capa do X de Eduardo Sanches" : "Banner do YouTube de Eduardo Sanches");
+      document.title = (formatName === "x" ? "Capa do X" : "Banner do YouTube") + " · Eduardo Sanches";
+
+      function displayFont(size) {
+        return "400 " + size + "px 'anzeigen-grotesk', 'Anton', sans-serif";
+      }
+
+      function bodyFont(size, italic) {
+        return (italic ? "italic " : "normal ") + "300 " + size + "px 'corporate-a', 'Instrument Serif', Georgia, serif";
+      }
+
+      function fitFont(text, initialSize, maxWidth) {
+        var size = initialSize;
+        context.font = displayFont(size);
+        while (context.measureText(text).width > maxWidth && size > 80) {
+          size -= 1;
+          context.font = displayFont(size);
+        }
+        return size;
+      }
+
+      function ellipseRadius(u, v, cx, cy, sx, sy) {
+        var dx = (u - cx) / sx;
+        var dy = (v - cy) / sy;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      function radiusField(u, v) {
+        var a = ellipseRadius(u, v, -0.32, -0.34, 1.22, 1.05);
+        var b = ellipseRadius(u, v, 1.32, 1.34, 1.22, 1.05);
+        return Math.min(a, b);
+      }
+
+      function renderBackground() {
+        var lut = new Uint8Array(1024 * 3);
+        var i;
+        for (i = 0; i < 1024; i += 1) {
+          var t = R_MIN + (R_MAX - R_MIN) * (i / 1023);
+          var stop = 0;
+          while (stop < STOPS.length - 2 && t > STOPS[stop + 1][0]) stop += 1;
+          var a = STOPS[stop];
+          var b = STOPS[stop + 1];
+          var k = (t - a[0]) / (b[0] - a[0]);
+          k = Math.max(0, Math.min(1, k));
+          lut[i * 3] = a[1] + (b[1] - a[1]) * k;
+          lut[i * 3 + 1] = a[2] + (b[2] - a[2]) * k;
+          lut[i * 3 + 2] = a[3] + (b[3] - a[3]) * k;
+        }
+
+        var step = 4;
+        var gridWidth = Math.ceil(WIDTH / step) + 2;
+        var gridHeight = Math.ceil(HEIGHT / step) + 2;
+        var field = new Float32Array(gridWidth * gridHeight);
+        var gx;
+        var gy;
+
+        for (gy = 0; gy < gridHeight; gy += 1) {
+          var v = (gy * step) / HEIGHT;
+          for (gx = 0; gx < gridWidth; gx += 1) {
+            var u = (gx * step) / WIDTH;
+            var warpedU = u + 0.010 * Math.sin(v * 4.6 + 1.2) + 0.003 * Math.sin(v * 10.3 + 3.1);
+            var warpedV = v + 0.012 * Math.sin(u * 3.9 + 0.6) + 0.003 * Math.sin(u * 8.3 + 5.0);
+            field[gy * gridWidth + gx] = radiusField(warpedU, warpedV);
+          }
+        }
+
+        var image = context.createImageData(WIDTH, HEIGHT);
+        var pixels = image.data;
+        var seed = 0x9e3779b9 | 0;
+        var pixel = 0;
+
+        for (var y = 0; y < HEIGHT; y += 1) {
+          var fieldY = y / step;
+          var y0 = fieldY | 0;
+          var ty = fieldY - y0;
+          var row0 = y0 * gridWidth;
+          var row1 = row0 + gridWidth;
+
+          for (var x = 0; x < WIDTH; x += 1) {
+            var fieldX = x / step;
+            var x0 = fieldX | 0;
+            var tx = fieldX - x0;
+            var top = field[row0 + x0] + (field[row0 + x0 + 1] - field[row0 + x0]) * tx;
+            var bottom = field[row1 + x0] + (field[row1 + x0 + 1] - field[row1 + x0]) * tx;
+            var radius = top + (bottom - top) * ty;
+            var ramp = Math.max(0, Math.min(1, (radius - R_MIN) / (R_MAX - R_MIN)));
+            var index = ((ramp * 1023) | 0) * 3;
+
+            seed ^= seed << 13;
+            seed ^= seed >>> 17;
+            seed ^= seed << 5;
+            var goldGrain = 36 * Math.exp(-Math.pow((radius - 0.56) / 0.17, 2));
+            var redGrain = 10 * Math.exp(-Math.pow((radius - 0.72) / 0.10, 2));
+            var noise = ((seed & 255) / 255 - 0.5) * (46 + goldGrain + redGrain);
+
+            pixels[pixel] = Math.max(0, Math.min(255, lut[index] + noise));
+            pixels[pixel + 1] = Math.max(0, Math.min(255, lut[index + 1] + noise));
+            pixels[pixel + 2] = Math.max(0, Math.min(255, lut[index + 2] + noise));
+            pixels[pixel + 3] = 255;
+            pixel += 4;
+          }
+        }
+
+        context.putImageData(image, 0, 0);
+      }
+
+      function drawAtmosphere() {
+        var vignette = context.createRadialGradient(
+          WIDTH / 2,
+          HEIGHT / 2,
+          Math.min(WIDTH, HEIGHT) * 0.21,
+          WIDTH / 2,
+          HEIGHT / 2,
+          Math.max(WIDTH, HEIGHT) * 0.59
+        );
+        vignette.addColorStop(0, "rgba(4, 12, 14, 0)");
+        vignette.addColorStop(0.72, "rgba(4, 12, 14, 0.08)");
+        vignette.addColorStop(1, "rgba(4, 12, 14, 0.34)");
+        context.fillStyle = vignette;
+        context.fillRect(0, 0, WIDTH, HEIGHT);
+
+        var sides = context.createLinearGradient(0, 0, WIDTH, 0);
+        sides.addColorStop(0, "rgba(4, 14, 16, 0.08)");
+        sides.addColorStop(0.22, "rgba(4, 14, 16, 0)");
+        sides.addColorStop(0.78, "rgba(4, 14, 16, 0)");
+        sides.addColorStop(1, "rgba(4, 14, 16, 0.08)");
+        context.fillStyle = sides;
+        context.fillRect(0, 0, WIDTH, HEIGHT);
+      }
+
+      function prepareTypography() {
+        var title = "EDUARDO SANCHES";
+        var maxTitleWidth = SAFE.width - format.titleMargin;
+        var titleSize = fitFont(title, format.titleSize, maxTitleWidth);
+
+        context.font = displayFont(titleSize);
+        var titleMetrics = context.measureText(title);
+        var titleAscent = titleMetrics.actualBoundingBoxAscent || titleSize * 0.78;
+        var titleDescent = titleMetrics.actualBoundingBoxDescent || titleSize * 0.04;
+
+        var taglineSize = format.taglineSize;
+        var taglineParts = [
+          { text: "creative mind", italic: false, colour: "#f5f6f7" },
+          { text: "  \u2022  ", italic: false, colour: "rgba(245, 246, 247, 0.52)" },
+          { text: "building things for ", italic: true, colour: "rgba(245, 246, 247, 0.82)" },
+          { text: "fun", italic: true, colour: "#ffc37a" }
+        ];
+
+        function measureTagline() {
+          var total = 0;
+          var ascent = 0;
+          var descent = 0;
+
+          taglineParts.forEach(function (part) {
+            context.font = bodyFont(taglineSize, part.italic);
+            var metrics = context.measureText(part.text);
+            part.width = metrics.width;
+            total += part.width;
+            ascent = Math.max(ascent, metrics.actualBoundingBoxAscent || taglineSize * 0.76);
+            descent = Math.max(descent, metrics.actualBoundingBoxDescent || taglineSize * 0.2);
+          });
+
+          return { total: total, ascent: ascent, descent: descent };
+        }
+
+        var taglineMetrics = measureTagline();
+        while (taglineMetrics.total > SAFE.width - format.taglineMargin && taglineSize > 26) {
+          taglineSize -= 1;
+          taglineMetrics = measureTagline();
+        }
+
+        var blockHeight = titleAscent + titleDescent + format.textGap + taglineMetrics.ascent + taglineMetrics.descent;
+        var blockTop = SAFE.y + (SAFE.height - blockHeight) / 2;
+
+        return {
+          title: title,
+          titleSize: titleSize,
+          titleBaseline: blockTop + titleAscent,
+          taglineSize: taglineSize,
+          taglineParts: taglineParts,
+          taglineWidth: taglineMetrics.total,
+          taglineBaseline: blockTop + titleAscent + titleDescent + format.textGap + taglineMetrics.ascent
+        };
+      }
+
+      function drawTitle(typography) {
+
+        context.save();
+        context.textAlign = "center";
+        context.textBaseline = "alphabetic";
+        context.font = displayFont(typography.titleSize);
+        context.fillStyle = "#f5f6f7";
+        context.shadowColor = "rgba(0, 0, 0, 0.72)";
+        context.shadowBlur = 46;
+        context.shadowOffsetY = 12;
+        context.fillText(typography.title, WIDTH / 2, typography.titleBaseline);
+        context.restore();
+      }
+
+      function drawTagline(typography) {
+        var x = (WIDTH - typography.taglineWidth) / 2;
+        context.save();
+        context.textAlign = "left";
+        context.textBaseline = "alphabetic";
+        context.shadowColor = "rgba(0, 0, 0, 0.78)";
+        context.shadowBlur = 30;
+        context.shadowOffsetY = 8;
+
+        typography.taglineParts.forEach(function (part) {
+          context.font = bodyFont(typography.taglineSize, part.italic);
+          context.fillStyle = part.colour;
+          context.fillText(part.text, x, typography.taglineBaseline);
+          x += part.width;
+        });
+        context.restore();
+      }
+
+      function drawGuides() {
+        if (!guides) return;
+
+        context.save();
+        context.strokeStyle = "rgba(255, 255, 255, 0.82)";
+        context.lineWidth = 3;
+        context.strokeRect(SAFE.x + 1.5, SAFE.y + 1.5, SAFE.width - 3, SAFE.height - 3);
+        context.fillStyle = "rgba(255, 255, 255, 0.92)";
+        context.font = "24px Arial, sans-serif";
+        context.textAlign = "left";
+        context.textBaseline = "top";
+        context.fillText(format.guideLabel, SAFE.x + 20, SAFE.y + 17);
+        context.restore();
+      }
+
+      function render() {
+        context.clearRect(0, 0, WIDTH, HEIGHT);
+        renderBackground();
+        drawAtmosphere();
+        var typography = prepareTypography();
+        drawTitle(typography);
+        drawTagline(typography);
+        drawGuides();
+        document.querySelector("#export-data").value = canvas.toDataURL("image/png");
+        document.body.setAttribute("data-format", formatName);
+        document.body.setAttribute("data-ready", "true");
+      }
+
+      var fontsReady = document.fonts ? Promise.all([
+        document.fonts.load("400 188px 'anzeigen-grotesk'"),
+        document.fonts.load("normal 300 48px 'corporate-a'"),
+        document.fonts.load("italic 300 48px 'corporate-a'")
+      ]) : Promise.resolve();
+
+      fontsReady.catch(function () {}).then(function () {
+        window.setTimeout(render, 80);
+      });
+    }());
+  </script>
+</body>
+</html>
